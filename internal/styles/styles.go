@@ -16,10 +16,18 @@ var (
 )
 
 var (
-	ASCIIStyle         = lipgloss.NewStyle().Foreground(SecondaryColor).PaddingBottom(1)
+	ASCIIStyle         = lipgloss.NewStyle().Foreground(MauveColor).PaddingBottom(1)
 	SectionHeaderStyle = lipgloss.NewStyle().
 				Bold(true).
 				Foreground(PrimaryColor)
-	StatusBarStyle = lipgloss.NewStyle().Foreground(MutedColor)
-	InputStyle     = lipgloss.NewStyle().Border(lipgloss.NormalBorder(), true, false).BorderForeground(SecondaryColor)
+	StatusBarStyle = lipgloss.NewStyle().Foreground(MutedColor).MarginTop(1)
+	InputStyle     = lipgloss.NewStyle().Border(lipgloss.NormalBorder(), true, false).BorderForeground(MutedColor)
+
+	listStyle              = lipgloss.NewStyle().Padding(0, 3)
+	ListTitleStyle         = listStyle.Foreground(lipgloss.Color("#bac2de"))
+	ListSelectedTitleStyle = listStyle.Foreground(lipgloss.Color("#b4befe")).Bold(true)
+	ListDescStyle          = listStyle.Foreground(lipgloss.Color("#6c7086"))
+	ListSelectedDescStyle  = listStyle.Foreground(lipgloss.Color("#cdd6f4"))
+
+	SpinnerStyle = lipgloss.NewStyle().Foreground(PinkColor)
 )

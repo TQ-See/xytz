@@ -4,6 +4,7 @@ import (
 	"log"
 	"strings"
 	"xytz/internal/styles"
+	"xytz/internal/types"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -19,12 +20,11 @@ func NewSearchModel() SearchModel {
 	ti := textinput.New()
 	ti.Placeholder = "Enter a query or URL"
 	ti.Focus()
-	ti.Width = 50
 	ti.Prompt = "❯ "
+	ti.PromptStyle = ti.PromptStyle.Foreground(styles.PinkColor)
+	ti.PlaceholderStyle = ti.PlaceholderStyle.Foreground(styles.MutedColor)
 
-	return SearchModel{
-		Input: ti,
-	}
+	return SearchModel{Input: ti}
 }
 
 func (m SearchModel) Init() tea.Cmd {
@@ -42,7 +42,6 @@ func (m SearchModel) View() string {
  ╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚══════╝`))
 	s.WriteRune('\n')
 	s.WriteString(styles.InputStyle.Render(m.Input.View()))
-	s.WriteRune('\n')
 
 	return s.String()
 }
@@ -61,12 +60,16 @@ func (m SearchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.Type {
 		case tea.KeyEnter:
 			query := m.Input.Value()
-			if query != "" {
-				log.Printf("query: %s", query)
+			if query == "" {
+				log.Print("query can't be empty")
+			}
+			cmd = func() tea.Msg {
+				return types.StartSearchMsg{Query: query}
 			}
 		}
 	}
 
-	m.Input, cmd = m.Input.Update(msg)
-	return m, cmd
+	var inputCmd tea.Cmd
+	m.Input, inputCmd = m.Input.Update(msg)
+	return m, tea.Batch(cmd, inputCmd)
 }
