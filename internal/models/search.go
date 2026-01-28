@@ -9,6 +9,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type SearchModel struct {
@@ -20,6 +21,7 @@ type SearchModel struct {
 	History       []string
 	HistoryIndex  int
 	OriginalQuery string
+	SortBy        types.SortBy
 }
 
 func NewSearchModel() SearchModel {
@@ -43,6 +45,7 @@ func NewSearchModel() SearchModel {
 		History:       history,
 		HistoryIndex:  -1,
 		OriginalQuery: "",
+		SortBy:        types.SortByRelevance,
 	}
 }
 
@@ -52,10 +55,16 @@ func (m SearchModel) Init() tea.Cmd {
 
 func (m SearchModel) View() string {
 	var s strings.Builder
-	s.WriteString(styles.ASCIIStyle.Render(`
+	s.WriteString(lipgloss.JoinHorizontal(lipgloss.Center, styles.ASCIIStyle.Render(`
  ████████████
 ██████  ██████
- ████████████ `))
+ ████████████ `),
+		lipgloss.NewStyle().PaddingLeft(4).Render(lipgloss.JoinVertical(
+			lipgloss.Left,
+			lipgloss.NewStyle().Foreground(styles.SecondaryColor).Bold(true).Render("xytz *Youtube from your terminal*"),
+			lipgloss.NewStyle().Foreground(styles.SecondaryColor).Bold(true).Render("v0.2.0 alpha"),
+			lipgloss.NewStyle().Foreground(styles.MauveColor).Underline(true).Render("https://github.com/xdagiz/xytz")),
+		)))
 	s.WriteRune('\n')
 
 	s.WriteString(styles.InputStyle.Render(m.Input.View()))
@@ -66,14 +75,19 @@ func (m SearchModel) View() string {
 			s.WriteString("\n")
 			s.WriteString(autocompleteView)
 		}
-	}
-
-	if m.Help.Visible {
+	} else if m.Help.Visible {
 		helpView := m.Help.View()
 		if helpView != "" {
 			s.WriteString("\n")
 			s.WriteString(helpView)
 		}
+	} else {
+		s.WriteRune('\n')
+		s.WriteString(styles.SortTitle.Render("Sort By"))
+		s.WriteString(styles.SortHelp.Render("(tab/shift+tab to cycle)"))
+		s.WriteRune('\n')
+		currentSort := styles.SortItem.Render(">", m.SortBy.GetDisplayName())
+		s.WriteString(currentSort)
 	}
 
 	return s.String()
@@ -146,11 +160,9 @@ func (m SearchModel) Update(msg tea.Msg) (SearchModel, tea.Cmd) {
 					m.completeAutocomplete()
 					query := m.Input.Value()
 					slashCmd, args, isSlash := parseSlashCommand(query)
-
 					if isSlash {
 						m.executeSlashCommand(slashCmd, args)
 					}
-
 					return m, nil
 				}
 			}
@@ -230,6 +242,12 @@ func (m SearchModel) Update(msg tea.Msg) (SearchModel, tea.Cmd) {
 		case tea.KeyDown, tea.KeyCtrlN:
 			m.navigateHistory(-1)
 			m.Input.CursorEnd()
+		case tea.KeyTab, tea.KeyLeft:
+			m.SortBy = m.SortBy.Next()
+			return m, nil
+		case tea.KeyShiftTab, tea.KeyRight:
+			m.SortBy = m.SortBy.Prev()
+			return m, nil
 		}
 	}
 

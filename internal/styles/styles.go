@@ -51,6 +51,11 @@ var (
 	AutocompleteSelected = autocompleteStyle.
 				Foreground(MauveColor)
 
+	sortStyle = lipgloss.NewStyle().PaddingLeft(1)
+	SortTitle = sortStyle.Foreground(SecondaryColor).PaddingTop(1).Bold(true)
+	SortHelp  = sortStyle.Foreground(MutedColor).Italic(true)
+	SortItem  = sortStyle.Foreground(MauveColor).PaddingLeft(1).Italic(true)
+
 	TabActiveStyle   = lipgloss.NewStyle().Foreground(BlackColor).Background(MauveColor)
 	TabInactiveStyle = lipgloss.NewStyle().Foreground(SecondaryColor)
 )

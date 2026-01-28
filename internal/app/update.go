@@ -27,7 +27,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.State = types.StateLoading
 		m.LoadingType = "search"
 		m.CurrentQuery = strings.TrimSpace(msg.Query)
-		cmd = utils.PerformSearch(msg.Query)
+		cmd = utils.PerformSearch(msg.Query, m.Search.SortBy.GetSPParam())
 		m.ErrMsg = ""
 	case types.StartFormatMsg:
 		m.State = types.StateLoading
@@ -85,7 +85,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.State = types.StateLoading
 		m.LoadingType = "channel_search"
 		m.CurrentQuery = msg.Channel
-		cmd = utils.PerformSearch(msg.Channel)
+		cmd = utils.PerformSearch(msg.Channel, m.Search.SortBy.GetSPParam())
 		m.ErrMsg = ""
 		return m, cmd
 	case tea.KeyMsg:

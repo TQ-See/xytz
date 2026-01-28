@@ -13,7 +13,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func PerformSearch(query string) tea.Cmd {
+func PerformSearch(query, sortParam string) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
 		query = strings.TrimSpace(query)
 
@@ -26,7 +26,7 @@ func PerformSearch(query string) tea.Cmd {
 		} else {
 
 			encodedQuery := url.QueryEscape(query)
-			searchURL := "https://www.youtube.com/results?search_query=" + encodedQuery
+			searchURL := "https://www.youtube.com/results?search_query=" + encodedQuery + "&sp=" + sortParam
 
 			if err := exec.Command("yt-dlp", "--version").Run(); err != nil {
 				errMsg := fmt.Sprintf("yt-dlp not found: %v\nPlease install yt-dlp: https://github.com/yt-dlp/yt-dlp#installation", err)
