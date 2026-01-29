@@ -5,6 +5,7 @@ import (
 	"github.com/xdagiz/xytz/internal/types"
 	"github.com/xdagiz/xytz/internal/utils"
 
+	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -141,6 +142,14 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case types.StateSearchInput:
 			m.Search, cmd = m.Search.Update(msg)
 		}
+	case list.FilterMatchesMsg:
+		switch m.State {
+		case types.StateVideoList:
+			m.VideoList, cmd = m.VideoList.Update(msg)
+		case types.StateFormatList:
+			m.FormatList, cmd = m.FormatList.Update(msg)
+		}
+		return m, cmd
 	}
 
 	switch m.State {

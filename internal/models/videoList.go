@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"strings"
+
 	"github.com/xdagiz/xytz/internal/styles"
 	"github.com/xdagiz/xytz/internal/types"
 
@@ -82,6 +83,10 @@ func (m VideoListModel) Update(msg tea.Msg) (VideoListModel, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyEnter:
+			if m.List.FilterState() == list.Filtering {
+				m.List.SetFilterState(list.FilterApplied)
+				return m, nil
+			}
 			if m.ErrMsg != "" {
 				cmd = func() tea.Msg {
 					return types.BackFromVideoListMsg{}

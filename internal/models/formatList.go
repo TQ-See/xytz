@@ -2,6 +2,7 @@ package models
 
 import (
 	"strings"
+
 	"github.com/xdagiz/xytz/internal/styles"
 	"github.com/xdagiz/xytz/internal/types"
 
@@ -59,6 +60,10 @@ func (m FormatListModel) Update(msg tea.Msg) (FormatListModel, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyEnter:
+			if m.List.FilterState() == list.Filtering {
+				m.List.SetFilterState(list.FilterApplied)
+				return m, nil
+			}
 			item := m.List.SelectedItem()
 			format := item.(types.FormatItem)
 			cmd = func() tea.Msg {
