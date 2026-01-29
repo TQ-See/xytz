@@ -6,7 +6,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"xytz/internal/types"
+	"github.com/xdagiz/xytz/internal/types"
 )
 
 func ExtractVideoID(url string) string {

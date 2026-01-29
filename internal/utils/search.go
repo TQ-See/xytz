@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"os/exec"
 	"strings"
-	"xytz/internal/types"
+	"github.com/xdagiz/xytz/internal/types"
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"

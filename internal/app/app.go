@@ -1,9 +1,9 @@
 package app
 
 import (
-	"xytz/internal/models"
-	"xytz/internal/styles"
-	"xytz/internal/types"
+	"github.com/xdagiz/xytz/internal/models"
+	"github.com/xdagiz/xytz/internal/styles"
+	"github.com/xdagiz/xytz/internal/types"
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"

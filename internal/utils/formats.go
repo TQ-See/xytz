@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
-	"xytz/internal/types"
+	"github.com/xdagiz/xytz/internal/types"
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"

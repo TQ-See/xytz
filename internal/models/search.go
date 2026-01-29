@@ -5,9 +5,10 @@ import (
 	"net/url"
 	"os/exec"
 	"strings"
-	"xytz/internal/styles"
-	"xytz/internal/types"
-	"xytz/internal/utils"
+
+	"github.com/xdagiz/xytz/internal/styles"
+	"github.com/xdagiz/xytz/internal/types"
+	"github.com/xdagiz/xytz/internal/utils"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"

@@ -3,8 +3,8 @@ package app
 import (
 	"fmt"
 	"strings"
-	"xytz/internal/styles"
-	"xytz/internal/types"
+	"github.com/xdagiz/xytz/internal/styles"
+	"github.com/xdagiz/xytz/internal/types"
 
 	"github.com/charmbracelet/lipgloss"
 	zone "github.com/lrstanley/bubblezone"

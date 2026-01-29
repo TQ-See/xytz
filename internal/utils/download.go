@@ -9,7 +9,7 @@ import (
 	"sync"
 	"syscall"
 
-	"xytz/internal/types"
+	"github.com/xdagiz/xytz/internal/types"
 
 	tea "github.com/charmbracelet/bubbletea"
 )

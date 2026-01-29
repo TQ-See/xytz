@@ -3,9 +3,9 @@ package models
 import (
 	"strings"
 	"time"
-	"xytz/internal/styles"
-	"xytz/internal/types"
-	"xytz/internal/utils"
+	"github.com/xdagiz/xytz/internal/styles"
+	"github.com/xdagiz/xytz/internal/types"
+	"github.com/xdagiz/xytz/internal/utils"
 
 	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"

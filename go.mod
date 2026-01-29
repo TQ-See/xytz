@@ -1,4 +1,4 @@
-module xytz
+module github.com/xdagiz/xytz
 
 go 1.25.5
 

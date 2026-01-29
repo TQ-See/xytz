@@ -2,7 +2,7 @@ package types
 
 import "github.com/charmbracelet/bubbles/list"
 
-const GithubRepoLink = "https://github.com/xdagiz/xytz"
+const GithubRepoLink = "https://github.com/xdagiz/github.com/xdagiz/xytz"
 
 type State string
 

@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 	"os"
-	"xytz/internal/app"
+	"github.com/xdagiz/xytz/internal/app"
 
 	tea "github.com/charmbracelet/bubbletea"
 	zone "github.com/lrstanley/bubblezone"

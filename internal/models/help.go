@@ -2,7 +2,7 @@ package models
 
 import (
 	"strings"
-	"xytz/internal/styles"
+	"github.com/xdagiz/xytz/internal/styles"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/lipgloss"

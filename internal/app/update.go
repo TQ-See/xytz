@@ -2,8 +2,8 @@ package app
 
 import (
 	"strings"
-	"xytz/internal/types"
-	"xytz/internal/utils"
+	"github.com/xdagiz/xytz/internal/types"
+	"github.com/xdagiz/xytz/internal/utils"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
