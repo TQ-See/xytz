@@ -29,7 +29,7 @@ for platform in "${platforms[@]}"; do
   GOOS=$os GOARCH=$arch go build \
     -ldflags "-s -w -X github.com/xdagiz/xytz/internal/version.Version=${VERSION}" \
     -o "${TEMP_DIR}/xytz${os:+.$os}${arch:+.$arch}" \
-    ./cmd/xytz
+    .
 
   if [ "$os" = "windows" ]; then
     mv "${TEMP_DIR}/xytz${os:+.$os}${arch:+.$arch}" "${TEMP_DIR}/xytz.exe"

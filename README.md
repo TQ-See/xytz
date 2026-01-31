@@ -15,17 +15,20 @@ A beautiful TUI app for searching and downloading YouTube videos, built with Go 
 - **Keyboard Navigation** - Vim-style keybindings and intuitive shortcuts
 - **Cross-Platform** - Works on Linux and Windows (MacOS not tested)
 
+**Requirements:**
+
+- **yt-dlp** - Required for video search and download functionality
+  - Installation: https://github.com/yt-dlp/yt-dlp#installation
+- **ffmpeg** (optional) - Required for adding subtitles, and more
+  - Installation: https://ffmpeg.org/download.html
+
 ## Installation
 
 ### 1. Download from Releases (Recommended)
 
 The easiest way to install xytz is to download a pre-built binary from the [Releases](https://github.com/xdagiz/xytz/releases) page.
 
-**Requirements:** yt-dlp, FFmpeg (optional)
-
 ```bash
-# Download the latest release for your platform
-# Linux example:
 curl -LO https://github.com/xdagiz/xytz/releases/latest/download/xytz-v1.0.0-linux-amd64.tar.gz
 tar -xzf xytz-v1.0.0-linux-amd64.tar.gz
 sudo mv xytz /usr/local/bin/
@@ -36,16 +39,12 @@ sudo mv xytz /usr/local/bin/
 If you have Go installed, you can install directly:
 
 ```bash
-go install github.com/xdagiz/xytz/cmd/xytz@latest
+go install github.com/xdagiz/xytz@latest
 ```
 
 **Requirements:**
 
 - **Go 1.25+** - For building from source
-- **yt-dlp** - Required for video search and download functionality
-  - Installation: https://github.com/yt-dlp/yt-dlp#installation
-- **FFmpeg** (optional) - Required for adding subtitles, and more
-  - Installation: https://ffmpeg.org/download.html
 
 ### 3. Build from Source
 
@@ -55,7 +54,7 @@ git clone https://github.com/xdagiz/xytz.git
 cd xytz
 
 # Build
-go build -o xytz ./cmd/xytz
+go build -o xytz .
 
 # Move to your PATH (optional)
 sudo mv xytz /usr/local/bin/
@@ -99,7 +98,7 @@ sort_by_default: relevance # Default sort: relevance, date, views, rating
 embed_subtitles: false # Embed subtitles in downloads
 embed_metadata: true # Embed metadata in downloads
 embed_chapters: true # Embed chapters in downloads
-ffmpeg_path: "" # Custom FFmpeg path (optional)
+ffmpeg_path: "" # Custom ffmpeg path (optional)
 yt_dlp_path: "" # Custom yt-dlp path (optional)
 ```
 
@@ -109,8 +108,7 @@ The configuration file is created automatically on first run with sensible defau
 
 ```
 xytz/
-├── cmd/xytz/           # Application entry point
-│   └── main.go
+├── main.go             # Application entry point
 ├── internal/           # Internal packages
 │   ├── app/            # Main application logic (Bubble Tea model)
 │   ├── config/         # Configuration management
@@ -148,7 +146,7 @@ cd xytz
 go mod tidy
 
 # Run in development mode
-go run ./cmd/xytz
+go run .
 ```
 
 ## Troubleshooting
@@ -163,9 +161,9 @@ yt-dlp --version
 
 If installed in a non-standard location, set `yt_dlp_path` in your config.
 
-### FFmpeg features unavailable
+### ffmpeg features unavailable
 
-Features like embedding subtitles require FFmpeg. Install it and ensure it's in your PATH, or set `ffmpeg_path` in your config.
+Features like embedding subtitles require ffmpeg. Install it and ensure it's in your PATH, or set `ffmpeg_path` in your config.
 
 ### Downloads failing
 
