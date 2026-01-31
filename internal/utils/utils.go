@@ -7,7 +7,7 @@ import (
 
 func bytesToHuman(bytes float64) string {
 	if bytes == 0 {
-		return "Unknown"
+		return "Unknown Size"
 	}
 	suffixes := []string{"B", "KiB", "MiB", "GiB", "TiB"}
 	i := 0
@@ -39,6 +39,16 @@ func formatNumber(n float64) string {
 		return fmt.Sprintf("%.1fK", n/1e3)
 	}
 	return fmt.Sprintf("%.0f", n)
+}
+
+func formatBitrate(kbps float64) string {
+	if kbps == 0 {
+		return "0k"
+	}
+	if kbps >= 1000 {
+		return fmt.Sprintf("%.1fM", kbps/1000)
+	}
+	return fmt.Sprintf("%.0fk", kbps)
 }
 
 func HasFFmpeg(ffmpegPath string) bool {

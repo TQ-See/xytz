@@ -39,6 +39,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.LoadingType = "format"
 		m.FormatList.URL = msg.URL
 		m.FormatList.DownloadOptions = m.Search.DownloadOptions
+		m.FormatList.ResetTab()
 		cmd = utils.FetchFormats(msg.URL)
 		m.ErrMsg = ""
 	case types.SearchResultMsg:
@@ -52,8 +53,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case types.FormatResultMsg:
 		m.LoadingType = ""
-		m.Videos = msg.Formats
-		m.FormatList.List.SetItems(msg.Formats)
+		m.FormatList.SetFormats(msg.VideoFormats, msg.AudioFormats, msg.ThumbnailFormats, msg.AllFormats)
 		m.State = types.StateFormatList
 		m.ErrMsg = msg.Err
 		return m, nil

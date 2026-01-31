@@ -57,12 +57,15 @@ type FormatItem struct {
 func (i FormatItem) Title() string       { return i.FormatTitle }
 func (i FormatItem) Description() string { return i.Size }
 func (i FormatItem) FilterValue() string {
-	return i.FormatTitle + " " + i.Size + " " + i.Language + " " + i.Resolution + " " + i.FormatType
+	return i.FormatTitle + " " + i.FormatValue + " " + i.Size + " " + i.Language + " " + i.Resolution + " " + i.FormatType
 }
 
 type FormatResultMsg struct {
-	Formats []list.Item
-	Err     string
+	VideoFormats     []list.Item
+	AudioFormats     []list.Item
+	ThumbnailFormats []list.Item
+	AllFormats       []list.Item
+	Err              string
 }
 
 type StartDownloadMsg struct {

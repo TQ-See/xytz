@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
+	"strconv"
+	"strings"
 
 	"github.com/xdagiz/xytz/internal/config"
 	"github.com/xdagiz/xytz/internal/types"
@@ -11,6 +13,45 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 )
+
+func formatQuality(resolution string) string {
+	if resolution == "" || resolution == "?" {
+		return resolution
+	}
+
+	parts := strings.Split(resolution, "x")
+	if len(parts) != 2 {
+		return resolution
+	}
+
+	height, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return resolution
+	}
+
+	switch {
+	case height >= 4320:
+		return "8k"
+	case height >= 2160:
+		return "4k"
+	case height >= 1440:
+		return "2k"
+	case height >= 1080:
+		return "1080p"
+	case height >= 720:
+		return "720p"
+	case height >= 480:
+		return "480p"
+	case height >= 360:
+		return "360p"
+	case height >= 240:
+		return "240p"
+	case height >= 144:
+		return "144p"
+	default:
+		return resolution
+	}
+}
 
 func FetchFormats(url string) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
@@ -35,7 +76,10 @@ func FetchFormats(url string) tea.Cmd {
 		}
 
 		formatsAny, _ := data["formats"].([]any)
-		var formats []list.Item
+		var videoFormats []list.Item
+		var audioFormats []list.Item
+		var thumbnailFormats []list.Item
+		var allFormats []list.Item
 
 		audioLanguages := make(map[string]bool)
 		for _, fAny := range formatsAny {
@@ -67,9 +111,11 @@ func FetchFormats(url string) tea.Cmd {
 			formatID, _ := f["format_id"].(string)
 			ext, _ := f["ext"].(string)
 			resolution, _ := f["resolution"].(string)
-			notes, _ := f["format_note"].(string)
 			acodec, _ := f["acodec"].(string)
 			vcodec, _ := f["vcodec"].(string)
+			abr, _ := f["abr"].(float64)
+			fps, _ := f["fps"].(float64)
+			tbr, _ := f["tbr"].(float64)
 
 			if formatID == "" {
 				continue
@@ -82,19 +128,24 @@ func FetchFormats(url string) tea.Cmd {
 			if resolution == "" || resolution == "Unknown" {
 				resolution = "?"
 			}
-			if notes == "" {
-				notes = "-"
-			}
 
 			formatType := ""
+			isVideoAudio := false
+			isAudioOnly := false
+			isThumbnail := ext == "mhtml"
+
 			if vcodec != "none" && vcodec != "" {
 				if acodec != "none" && acodec != "" {
 					formatType = "video+audio"
+					isVideoAudio = true
 				} else {
 					formatType = "video-only"
 				}
 			} else if acodec != "none" && acodec != "" {
 				formatType = "audio-only"
+				isAudioOnly = true
+			} else if isThumbnail {
+				formatType = "thumbnail"
 			} else {
 				formatType = "unknown"
 			}
@@ -117,21 +168,54 @@ func FetchFormats(url string) tea.Cmd {
 				}
 			}
 
-			title := fmt.Sprintf("%s (%s %s - %s)", formatID, resolution, formatType, ext)
+			title := ext
+			if isAudioOnly {
+				if abr > 0 {
+					title = fmt.Sprintf("%s @%dk", ext, int(abr))
+				}
+			} else if isThumbnail {
+				title = formatQuality(resolution)
+			} else {
+				quality := formatQuality(resolution)
+				if fps > 0 {
+					quality = fmt.Sprintf("%s%.0f", quality, fps)
+				}
+				title = quality
+				if tbr > 0 {
+					title = fmt.Sprintf("%s @%s", title, formatBitrate(tbr))
+				}
+				title = fmt.Sprintf("%s %s", title, ext)
+			}
+
 			if showLanguage && (acodec != "none" && acodec != "") {
 				title = fmt.Sprintf("%s [%s]", title, lang)
 			}
 
-			formats = append(formats, types.FormatItem{
+			formatItem := types.FormatItem{
 				FormatTitle: title,
 				FormatValue: formatID,
 				Size:        sizeStr,
 				Language:    lang,
 				Resolution:  resolution,
 				FormatType:  formatType,
-			})
+			}
+
+			allFormats = append(allFormats, formatItem)
+
+			if isVideoAudio {
+				videoFormats = append(videoFormats, formatItem)
+			} else if isAudioOnly {
+				audioFormats = append(audioFormats, formatItem)
+			} else if isThumbnail {
+				thumbnailFormats = append(thumbnailFormats, formatItem)
+			}
 		}
 
-		return types.FormatResultMsg{Formats: formats}
+		return types.FormatResultMsg{
+			VideoFormats:     videoFormats,
+			AudioFormats:     audioFormats,
+			ThumbnailFormats: thumbnailFormats,
+			AllFormats:       allFormats,
+		}
 	})
 }

@@ -58,4 +58,8 @@ var (
 
 	TabActiveStyle   = lipgloss.NewStyle().Foreground(BlackColor).Background(MauveColor)
 	TabInactiveStyle = lipgloss.NewStyle().Foreground(SecondaryColor)
+
+	FormatContainerStyle     = lipgloss.NewStyle().PaddingLeft(2)
+	FormatCustomMessageStyle = lipgloss.NewStyle().Foreground(MutedColor).PaddingTop(1)
+	FormatTabHelpStyle       = lipgloss.NewStyle().Foreground(MutedColor)
 )
