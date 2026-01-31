@@ -110,6 +110,9 @@ func (m *Model) View() string {
 		statusBar = styles.StatusBarStyle.Height(1).Width(m.Width).Render(left)
 	}
 
+	contentStyle := lipgloss.NewStyle().Height(m.Height - 3)
+	content = contentStyle.Render(content)
+
 	return zone.Scan(lipgloss.JoinVertical(lipgloss.Top, content, statusBar))
 }
 

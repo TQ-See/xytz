@@ -76,7 +76,7 @@ func (m VideoListModel) View() string {
 func (m VideoListModel) HandleResize(w, h int) VideoListModel {
 	m.Width = w
 	m.Height = h
-	m.List.SetSize(w, h-6)
+	m.List.SetSize(w, h-7)
 	return m
 }
 

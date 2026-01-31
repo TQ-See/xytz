@@ -4,6 +4,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/xdagiz/xytz/internal/models"
 	"github.com/xdagiz/xytz/internal/types"
 	"github.com/xdagiz/xytz/internal/utils"
 
@@ -130,12 +131,14 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			m.VideoList, cmd = m.VideoList.Update(msg)
 		case types.StateFormatList:
-			switch msg.String() {
-			case "b":
-				m.State = types.StateVideoList
-				m.ErrMsg = ""
-				m.FormatList.List.ResetSelected()
-				return m, nil
+			if m.FormatList.ActiveTab != models.FormatTabCustom {
+				switch msg.String() {
+				case "b":
+					m.State = types.StateVideoList
+					m.ErrMsg = ""
+					m.FormatList.List.ResetSelected()
+					return m, nil
+				}
 			}
 			m.FormatList, cmd = m.FormatList.Update(msg)
 		case types.StateDownload:
@@ -162,8 +165,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.FormatList, cmd = m.FormatList.Update(msg)
 		}
 		return m, cmd
-	case tea.QuitMsg:
-
 	}
 
 	switch m.State {

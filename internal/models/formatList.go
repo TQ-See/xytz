@@ -8,6 +8,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -26,6 +27,8 @@ type FormatListModel struct {
 	Width            int
 	Height           int
 	List             list.Model
+	CustomInput      textinput.Model
+	Autocomplete     FormatAutocompleteModel
 	URL              string
 	DownloadOptions  []types.DownloadOption
 	ActiveTab        FormatTab
@@ -47,9 +50,19 @@ func NewFormatListModel() FormatListModel {
 	li.FilterInput.Cursor.Style = li.FilterInput.Cursor.Style.Foreground(styles.PinkColor)
 	li.FilterInput.PromptStyle = li.FilterInput.PromptStyle.Foreground(styles.SecondaryColor)
 
+	ti := textinput.New()
+	ti.Placeholder = "Enter format id (e.g. 140+137 or bestvideo+bestaudio)"
+	ti.Focus()
+	ti.Prompt = "❯ "
+	ti.PromptStyle = styles.FormatCustomInputPrompt
+	ti.PlaceholderStyle = ti.PlaceholderStyle.Foreground(styles.MutedColor)
+	ti.TextStyle = ti.TextStyle.Foreground(styles.SecondaryColor)
+
 	return FormatListModel{
-		List:      li,
-		ActiveTab: FormatTabVideo,
+		List:         li,
+		CustomInput:  ti,
+		Autocomplete: NewFormatAutocompleteModel(),
+		ActiveTab:    FormatTabVideo,
 	}
 }
 
@@ -68,7 +81,16 @@ func (m FormatListModel) View() string {
 	s.WriteRune('\n')
 
 	if m.ActiveTab == FormatTabCustom {
-		s.WriteString(container.PaddingLeft(4).Render(styles.FormatCustomMessageStyle.Render("Custom format selection coming soon...")))
+		s.WriteString(styles.CustomFormatContainerStyle.Render(styles.FormatCustomInputStyle.Render(m.CustomInput.View())))
+		s.WriteRune('\n')
+
+		autocompleteView := m.Autocomplete.View(m.Width-8, m.Height-13)
+		if autocompleteView != "" {
+			s.WriteString(styles.CustomFormatContainerStyle.Render(autocompleteView))
+			s.WriteRune('\n')
+		} else {
+			s.WriteString(styles.CustomFormatContainerStyle.Render(styles.FormatCustomHelpStyle.Render("Type to search formats.")))
+		}
 	} else {
 		s.WriteString(container.Render(styles.ListContainer.Render(m.List.View())))
 	}
@@ -101,11 +123,44 @@ func (m FormatListModel) HandleResize(w, h int) FormatListModel {
 	m.Width = w
 	m.Height = h
 	m.List.SetSize(w, h-8)
+	m.CustomInput.Width = w - 12
+	m.Autocomplete.HandleResize(w, h)
 	return m
 }
 
 func (m FormatListModel) Update(msg tea.Msg) (FormatListModel, tea.Cmd) {
 	var cmd tea.Cmd
+
+	handled, autocompleteCmd := m.Autocomplete.Update(msg)
+	if handled {
+		if keyMsg, ok := msg.(tea.KeyMsg); ok {
+			switch keyMsg.Type {
+			case tea.KeyEnter, tea.KeyTab:
+				if m.Autocomplete.Visible {
+					if format := m.Autocomplete.SelectedFormat(); format != nil {
+						currentValue := m.CustomInput.Value()
+						lastPlus := strings.LastIndex(currentValue, "+")
+
+						var newValue string
+						if lastPlus >= 0 {
+							newValue = strings.TrimSpace(currentValue[:lastPlus+1]) + format.FormatValue
+						} else {
+							newValue = format.FormatValue
+						}
+
+						m.CustomInput.SetValue(newValue)
+						m.CustomInput.CursorEnd()
+					}
+
+					m.Autocomplete.Hide()
+					return m, nil
+				}
+			}
+		}
+
+		return m, tea.Batch(cmd, autocompleteCmd)
+	}
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
@@ -117,23 +172,39 @@ func (m FormatListModel) Update(msg tea.Msg) (FormatListModel, tea.Cmd) {
 			return m, nil
 		case msg.Type == tea.KeyEnter:
 			if m.ActiveTab == FormatTabCustom {
-				return m, nil
+				formatID := strings.TrimSpace(m.CustomInput.Value())
+				if formatID != "" {
+					cmd = func() tea.Msg {
+						return types.StartDownloadMsg{
+							URL:             m.URL,
+							FormatID:        formatID,
+							DownloadOptions: m.DownloadOptions,
+						}
+					}
+				}
+
+				return m, cmd
 			}
+
 			if m.List.FilterState() == list.Filtering {
 				m.List.SetFilterState(list.FilterApplied)
 				return m, nil
 			}
+
 			if len(m.List.Items()) == 0 {
 				return m, nil
 			}
+
 			item := m.List.SelectedItem()
 			if item == nil {
 				return m, nil
 			}
+
 			format, ok := item.(types.FormatItem)
 			if !ok {
 				return m, nil
 			}
+
 			cmd = func() tea.Msg {
 				msg := types.StartDownloadMsg{
 					URL:             m.URL,
@@ -143,6 +214,20 @@ func (m FormatListModel) Update(msg tea.Msg) (FormatListModel, tea.Cmd) {
 				return msg
 			}
 		}
+	}
+
+	if m.ActiveTab == FormatTabCustom {
+		var inputCmd tea.Cmd
+		m.CustomInput, inputCmd = m.CustomInput.Update(msg)
+
+		currentValue := m.CustomInput.Value()
+		if currentValue != "" {
+			m.Autocomplete.Show(currentValue, m.AllFormats)
+		} else {
+			m.Autocomplete.Hide()
+		}
+
+		return m, tea.Batch(cmd, inputCmd)
 	}
 
 	var listCmd tea.Cmd
@@ -193,10 +278,14 @@ func (m *FormatListModel) SetFormats(videoFormats, audioFormats, thumbnailFormat
 
 func (m *FormatListModel) ClearSelection() {
 	m.List.Select(-1)
+	m.CustomInput.SetValue("")
+	m.Autocomplete.Hide()
 }
 
 func (m *FormatListModel) ResetTab() {
 	m.ActiveTab = FormatTabVideo
+	m.CustomInput.SetValue("")
+	m.Autocomplete.Hide()
 	m.updateListForTab()
 }
 

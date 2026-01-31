@@ -22,7 +22,7 @@ var (
 				Bold(true).
 				Foreground(SecondaryColor).
 				Padding(1, 0)
-	StatusBarStyle = lipgloss.NewStyle().Foreground(MutedColor).MarginTop(1)
+	StatusBarStyle = lipgloss.NewStyle().Foreground(MutedColor).MarginTop(1).PaddingBottom(1)
 	InputStyle     = lipgloss.NewStyle().Border(lipgloss.NormalBorder(), true, false).BorderForeground(MutedColor)
 
 	listStyle              = lipgloss.NewStyle().Padding(0, 3)
@@ -59,7 +59,10 @@ var (
 	TabActiveStyle   = lipgloss.NewStyle().Foreground(BlackColor).Background(MauveColor)
 	TabInactiveStyle = lipgloss.NewStyle().Foreground(SecondaryColor)
 
-	FormatContainerStyle     = lipgloss.NewStyle().PaddingLeft(2)
-	FormatCustomMessageStyle = lipgloss.NewStyle().Foreground(MutedColor).PaddingTop(1)
-	FormatTabHelpStyle       = lipgloss.NewStyle().Foreground(MutedColor)
+	FormatContainerStyle       = lipgloss.NewStyle().PaddingLeft(1)
+	CustomFormatContainerStyle = FormatContainerStyle.PaddingLeft(3)
+	FormatTabHelpStyle         = lipgloss.NewStyle().Foreground(MutedColor)
+	FormatCustomInputStyle     = lipgloss.NewStyle().Border(lipgloss.NormalBorder(), true, false).BorderForeground(MutedColor).MarginTop(1)
+	FormatCustomInputPrompt    = lipgloss.NewStyle().Foreground(PinkColor)
+	FormatCustomHelpStyle      = lipgloss.NewStyle().Foreground(MutedColor).PaddingTop(1)
 )

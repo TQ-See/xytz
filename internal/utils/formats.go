@@ -203,7 +203,10 @@ func FetchFormats(url string) tea.Cmd {
 			allFormats = append(allFormats, formatItem)
 
 			if isVideoAudio {
-				videoFormats = append(videoFormats, formatItem)
+				// Filter out formats below 360p (144p and 240p)
+				if !strings.Contains(title, "144p") && !strings.Contains(title, "240p") {
+					videoFormats = append(videoFormats, formatItem)
+				}
 			} else if isAudioOnly {
 				audioFormats = append(audioFormats, formatItem)
 			} else if isThumbnail {
