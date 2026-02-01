@@ -58,6 +58,54 @@ func ExtractVideoID(url string) string {
 	return ""
 }
 
+func ExtractChannelUsername(input string) string {
+	input = strings.TrimSpace(input)
+
+	if strings.HasPrefix(input, "@") {
+		return strings.TrimPrefix(input, "@")
+	}
+
+	if strings.Contains(input, "youtube.com") {
+		if strings.Contains(input, "youtube.com/@") {
+			parts := strings.Split(input, "@")
+			if len(parts) > 1 {
+				username := parts[1]
+				if idx := strings.Index(username, "/"); idx != -1 {
+					username = username[:idx]
+				}
+
+				return username
+			}
+		}
+
+		if strings.Contains(input, "/channel/") {
+			parts := strings.Split(input, "/channel/")
+			if len(parts) > 1 {
+				channelID := parts[1]
+				if idx := strings.Index(channelID, "?"); idx != -1 {
+					channelID = channelID[:idx]
+				}
+
+				return input
+			}
+		}
+
+		if strings.Contains(input, "/c/") {
+			parts := strings.Split(input, "/c/")
+			if len(parts) > 1 {
+				customName := parts[1]
+				if idx := strings.Index(customName, "/"); idx != -1 {
+					customName = customName[:idx]
+				}
+
+				return customName
+			}
+		}
+	}
+
+	return input
+}
+
 func ParseVideoItem(line string) (types.VideoItem, error) {
 	var data map[string]any
 	if err := json.Unmarshal([]byte(line), &data); err != nil {

@@ -159,10 +159,21 @@ func PerformSearch(query, sortParam string) tea.Cmd {
 	})
 }
 
-func PerformChannelSearch(username string) tea.Cmd {
+func PerformChannelSearch(input string) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
-		encodedChannel := url.QueryEscape(username)
-		channelURL := "https://www.youtube.com/@" + encodedChannel + "/videos"
+		var channelURL string
+
+		if strings.Contains(input, "youtube.com") {
+			channelURL = input
+			if !strings.HasSuffix(channelURL, "/videos") {
+				channelURL = strings.TrimSuffix(channelURL, "/") + "/videos"
+			}
+		} else if len(input) >= 22 && strings.HasPrefix(input, "UC") {
+			channelURL = "https://www.youtube.com/channel/" + input + "/videos"
+		} else {
+			encodedChannel := url.QueryEscape(input)
+			channelURL = "https://www.youtube.com/@" + encodedChannel + "/videos"
+		}
 
 		return executeYTDLP(channelURL)
 	})

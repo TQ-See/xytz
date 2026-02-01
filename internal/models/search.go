@@ -299,8 +299,9 @@ func (m SearchModel) Update(msg tea.Msg) (SearchModel, tea.Cmd) {
 						m.Input.CursorEnd()
 					} else {
 						m.addToHistory(query)
+						channelName := utils.ExtractChannelUsername(args)
 						cmd = func() tea.Msg {
-							return types.StartChannelURLMsg{ChannelName: args}
+							return types.StartChannelURLMsg{ChannelName: channelName}
 						}
 					}
 				case "playlist":
@@ -328,7 +329,10 @@ func (m SearchModel) Update(msg tea.Msg) (SearchModel, tea.Cmd) {
 			m.updateAutocompleteFilter()
 		case tea.KeyRunes:
 			if string(msg.Runes) == "/" && !m.Autocomplete.Visible {
-				m.Autocomplete.Show("/")
+				currentValue := m.Input.Value()
+				if currentValue == "" {
+					m.Autocomplete.Show("/")
+				}
 			} else if m.Autocomplete.Visible {
 				m.updateAutocompleteFilter()
 			}
