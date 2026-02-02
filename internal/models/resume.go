@@ -88,6 +88,15 @@ func (m *ResumeModel) LoadItems() {
 		m.Filtered = []ResumeMatchResult{}
 		return
 	}
+
+	for i := 0; i < len(items); i++ {
+		for j := i + 1; j < len(items); j++ {
+			if items[i].Timestamp.Before(items[j].Timestamp) {
+				items[i], items[j] = items[j], items[i]
+			}
+		}
+	}
+
 	m.AllItems = items
 	m.UpdateFilteredItems()
 }

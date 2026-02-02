@@ -87,8 +87,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case types.DownloadResultMsg:
 		m.LoadingType = ""
 		if msg.Err != "" {
-			m.ErrMsg = msg.Err
-			m.State = types.StateSearchInput
+			if !m.Download.Cancelled {
+				m.ErrMsg = msg.Err
+				m.State = types.StateSearchInput
+			}
 		} else {
 			m.Download.Completed = true
 		}
@@ -105,7 +107,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case types.CancelDownloadMsg:
 		m.Download.Cancelled = true
+		m.State = types.StateVideoList
 		m.ErrMsg = "Download cancelled"
+		m.FormatList.List.ResetSelected()
 		return m, nil
 	case types.CancelSearchMsg:
 		m.State = types.StateSearchInput
