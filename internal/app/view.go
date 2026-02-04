@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/key"
+	"github.com/xdagiz/xytz/internal/models"
 	"github.com/xdagiz/xytz/internal/styles"
 	"github.com/xdagiz/xytz/internal/types"
 
@@ -11,53 +13,94 @@ import (
 	zone "github.com/lrstanley/bubblezone"
 )
 
-const (
-	statusQuit              = "Ctrl+C/q: quit"
-	statusBack              = "Esc/b: Back"
-	statusEnterBack         = "Enter: Back"
-	statusEnterBackToSearch = "Enter: Back to Search"
-	statusPause             = "␣ / p: Pause"
-	statusResume            = "␣ / p: Resume"
-	statusCancel            = "Esc or c: Cancel"
-	statusEscCancel         = "Esc to cancel"
-)
-
 type StatusBarConfig struct {
-	HasError    bool
-	HelpVisible bool
-	IsPaused    bool
-	IsCompleted bool
-	IsCancelled bool
+	HasError       bool
+	HelpVisible   bool
+	IsPaused      bool
+	IsCompleted   bool
+	IsCancelled   bool
+	Keys          models.StatusKeys
+	ResumeVisible bool
 }
 
-func getStatusBarText(state types.State, cfg StatusBarConfig) string {
-	baseQuit := statusQuit
-
+func getStatusBarText(state types.State, cfg StatusBarConfig, helpKeys models.HelpKeys) string {
 	switch state {
 	case types.StateSearchInput:
 		if cfg.HelpVisible {
-			return styles.StatusBarStyle.Padding(0).Italic(true).Render(statusEscCancel)
+			return styles.StatusBarStyle.Padding(0).Italic(true).Render(
+				models.FormatKeysForStatusBar(models.StatusKeys{
+					Cancel: key.NewBinding(
+						key.WithKeys("esc"),
+						key.WithHelp("esc", "close"),
+					),
+					Next:   helpKeys.Next,
+					Prev:   helpKeys.Prev,
+				}),
+			)
 		}
-		return "Ctrl+C: quit"
+
+		if cfg.ResumeVisible {
+			return styles.StatusBarStyle.Padding(0).Italic(true).Render(
+				models.FormatKeysForStatusBar(models.StatusKeys{
+					Up:     cfg.Keys.Up,
+					Down:   cfg.Keys.Down,
+					Select: cfg.Keys.Select,
+					Delete: cfg.Keys.Delete,
+					Cancel: cfg.Keys.Cancel,
+				}),
+			)
+		}
+
+		return models.FormatKeysForStatusBar(cfg.Keys)
 	case types.StateLoading:
-		return joinStatus(baseQuit, statusEscCancel)
+		return models.FormatKeysForStatusBar(models.StatusKeys{
+			Quit: cfg.Keys.Quit,
+			Cancel: key.NewBinding(
+				key.WithKeys("esc", "c"),
+				key.WithHelp("Esc/c", "cancel"),
+			),
+		})
 	case types.StateVideoList:
 		if cfg.HasError {
-			return joinStatus(baseQuit, statusEnterBack)
+			return models.FormatKeysForStatusBar(models.StatusKeys{
+				Quit:  cfg.Keys.Quit,
+				Enter: cfg.Keys.Enter,
+			})
 		}
-		return joinStatus(baseQuit, statusBack)
+		return models.FormatKeysForStatusBar(models.StatusKeys{
+			Quit: cfg.Keys.Quit,
+			Back: cfg.Keys.Back,
+		})
 	case types.StateFormatList:
-		return joinStatus(baseQuit, statusBack)
+		return models.FormatKeysForStatusBar(models.StatusKeys{
+			Quit: cfg.Keys.Quit,
+			Back: cfg.Keys.Back,
+			Tab:  cfg.Keys.Tab,
+		})
 	case types.StateDownload:
 		if cfg.IsCompleted || cfg.IsCancelled {
-			return joinStatus(baseQuit, statusBack, statusEnterBackToSearch)
+			return models.FormatKeysForStatusBar(models.StatusKeys{
+				Quit:  cfg.Keys.Quit,
+				Back:  cfg.Keys.Back,
+				Enter: cfg.Keys.Enter,
+			})
 		}
 		if cfg.IsPaused {
-			return joinStatus(baseQuit, statusResume, statusCancel)
+			return models.FormatKeysForStatusBar(models.StatusKeys{
+				Quit:   cfg.Keys.Quit,
+				Pause:  cfg.Keys.Pause,
+				Cancel: cfg.Keys.Cancel,
+			})
 		}
-		return joinStatus(baseQuit, statusPause, statusCancel)
+		return models.FormatKeysForStatusBar(models.StatusKeys{
+			Quit:   cfg.Keys.Quit,
+			Pause:  cfg.Keys.Pause,
+			Cancel: cfg.Keys.Cancel,
+		})
 	default:
-		return baseQuit
+		return models.FormatKeysForStatusBar(models.StatusKeys{
+			Quit: cfg.Keys.Quit,
+		})
 	}
 }
 
@@ -94,14 +137,16 @@ func (m *Model) View() string {
 	}
 
 	statusCfg := StatusBarConfig{
-		HasError:    m.VideoList.ErrMsg != "",
-		HelpVisible: m.Search.Help.Visible,
-		IsPaused:    m.Download.Paused,
-		IsCompleted: m.Download.Completed,
-		IsCancelled: m.Download.Cancelled,
+		HasError:       m.VideoList.ErrMsg != "",
+		HelpVisible:    m.Search.Help.Visible,
+		IsPaused:      m.Download.Paused,
+		IsCompleted:   m.Download.Completed,
+		IsCancelled:   m.Download.Cancelled,
+		Keys:          models.GetStatusKeys(m.State, m.Search.Help.Visible, m.Search.ResumeList.Visible, m.Search.ResumeList.Keys),
+		ResumeVisible: m.Search.ResumeList.Visible,
 	}
 
-	left := getStatusBarText(m.State, statusCfg)
+	left := getStatusBarText(m.State, statusCfg, m.Search.Help.Keys)
 
 	right := ""
 	if m.ErrMsg != "" {

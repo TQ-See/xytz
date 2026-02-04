@@ -3,13 +3,10 @@ package main
 import (
 	"log"
 	"os"
-	"os/signal"
 	"path/filepath"
-	"syscall"
 
 	"github.com/xdagiz/xytz/internal/app"
 	"github.com/xdagiz/xytz/internal/config"
-	"github.com/xdagiz/xytz/internal/utils"
 
 	tea "github.com/charmbracelet/bubbletea"
 	zone "github.com/lrstanley/bubblezone"
@@ -44,16 +41,7 @@ func main() {
 		defer logger.Close()
 	}
 
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-
-	go func() {
-		<-sigChan
-		utils.CleanupDownload()
-	}()
-
 	if _, err := p.Run(); err != nil {
-		utils.CleanupDownload()
 		log.Fatal("unable to run the app")
 		os.Exit(1)
 	}

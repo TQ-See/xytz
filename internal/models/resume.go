@@ -22,15 +22,19 @@ func DefaultResumeKeyMap() ResumeKeyMap {
 	return ResumeKeyMap{
 		Up: key.NewBinding(
 			key.WithKeys("ctrl+p", "up"),
+			key.WithHelp("Ctrl+p", "up"),
 		),
 		Down: key.NewBinding(
 			key.WithKeys("ctrl+n", "down"),
+			key.WithHelp("Ctrl+n", "down"),
 		),
 		Select: key.NewBinding(
 			key.WithKeys("enter"),
+			key.WithHelp("Enter", "select"),
 		),
 		Delete: key.NewBinding(
 			key.WithKeys("delete"),
+			key.WithHelp("Delete", "delete"),
 		),
 	}
 }

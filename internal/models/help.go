@@ -18,6 +18,7 @@ type HelpModel struct {
 	ActiveTab int
 	Tabs      []HelpTab
 	TabStyles tabStyles
+	Keys      HelpKeys
 }
 
 type HelpTab struct {
@@ -43,6 +44,7 @@ func NewHelpModel() HelpModel {
 		Width:     60,
 		ActiveTab: 0,
 		TabStyles: ts,
+		Keys:      DefaultHelpKeys(),
 		Tabs: []HelpTab{
 			{
 				Title: "commands",
@@ -93,12 +95,12 @@ func (m HelpModel) Update(msg tea.Msg) (HelpModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, keys.Prev):
+		case key.Matches(msg, m.Keys.Prev):
 			m.ActiveTab--
 			if m.ActiveTab < 0 {
 				m.ActiveTab = len(m.Tabs) - 1
 			}
-		case key.Matches(msg, keys.Next):
+		case key.Matches(msg, m.Keys.Next):
 			m.ActiveTab++
 			if m.ActiveTab >= len(m.Tabs) {
 				m.ActiveTab = 0
@@ -137,12 +139,20 @@ func (m HelpModel) View() string {
 	return helpContent
 }
 
-type helpKeys struct {
+type HelpKeys struct {
 	Next key.Binding
 	Prev key.Binding
 }
 
-var keys = helpKeys{
-	Next: key.NewBinding(key.WithKeys("l", "j", "right", "tab")),
-	Prev: key.NewBinding(key.WithKeys("h", "k", "left", "shift+tab")),
+func DefaultHelpKeys() HelpKeys {
+	return HelpKeys{
+		Next: key.NewBinding(
+			key.WithKeys("l", "j", "right", "tab"),
+			key.WithHelp("→/tab", "next"),
+		),
+		Prev: key.NewBinding(
+			key.WithKeys("h", "k", "left", "shift+tab"),
+			key.WithHelp("←/shift+tab", "prev"),
+		),
+	}
 }
