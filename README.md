@@ -22,7 +22,7 @@ https://github.com/user-attachments/assets/4e3f98c7-554f-4b9e-adac-52511ae69f32
 
 - **yt-dlp** - Required for video search and download functionality
   - Installation: https://github.com/yt-dlp/yt-dlp#installation
-- **ffmpeg** (optional) - Required for adding subtitles, and more
+- **ffmpeg** - Required for full features
   - Installation: https://ffmpeg.org/download.html
 
 ## Installation
@@ -151,9 +151,9 @@ yt-dlp --version
 
 If installed in a non-standard location, set `yt_dlp_path` in your config.
 
-### ffmpeg features unavailable
+### ffmpeg not found
 
-Features like embedding subtitles require ffmpeg. Install it and ensure it's in your PATH, or set `ffmpeg_path` in your config.
+ffmpeg is required for most of features to work. Install it and ensure it's in your PATH, or set `ffmpeg_path` in your config.
 
 ### Downloads failing
 
@@ -161,11 +161,12 @@ Features like embedding subtitles require ffmpeg. Install it and ensure it's in 
 - Verify the video is available in your region
 - Ensure you have sufficient disk space
 - Check the download path is writable
+- Make sure you have `yt-dlp` and `ffmpeg` installed
 
 ## Acknowledgments
 
 - [Bubble Tea](https://github.com/charmbracelet/bubbletea) - TUI framework
-- [yt-dlp](https://github.com/yt-dlp/yt-dlp) - Video download engine
+- [yt-dlp](https://github.com/yt-dlp/yt-dlp) - YouTube download engine
 - [Lipgloss](https://github.com/charmbracelet/lipgloss) - Styling library
 - [Bubbles](https://github.com/charmbracelet/bubbles) - TUI components
 
