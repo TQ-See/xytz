@@ -74,6 +74,42 @@ xytz
 3. **Choose Format** - Select your preferred video/audio format
 4. **Download** - The download starts automatically
 
+## CLI Arguments
+
+xytz supports command-line arguments for quick access to search, channels, and playlists.
+
+### Quick Reference
+
+| Flag         | Short | Description                                          |
+| ------------ | ----- | ---------------------------------------------------- |
+| `--number`   | `-n`  | Number of search results                             |
+| `--sort-by`  | `-s`  | Sort results: `relevance`, `date`, `views`, `rating` |
+| `--query`    | `-q`  | Direct search query                                  |
+| `--channel`  | `-c`  | Browse channel (use `@username` format)              |
+| `--playlist` | `-p`  | Browse playlist (use playlist ID)                    |
+| `--help`     | `-h`  | Show help message                                    |
+
+> **Note:** Default values for these flags are grabbed from the configuration file (`~/.config/xytz/config.yaml`).
+
+### Usage Examples
+
+```bash
+# Direct video search
+xytz -q "golang tutorial"
+
+# Browse a specific channel
+xytz -c @username
+
+# Browse a playlist
+xytz -p PLplaylistId
+
+# Custom search results and sorting
+xytz -n 50 -s date
+
+# Combined: Search with custom options
+xytz -q "rust programming" -n 10 -s views
+```
+
 ## Configuration
 
 xytz uses a YAML configuration file located at `~/.config/xytz/config.yaml`.
@@ -170,6 +206,8 @@ ffmpeg is required for most of features to work. Install it and ensure it's in y
 - [Lipgloss](https://github.com/charmbracelet/lipgloss) - Styling library
 - [Bubbles](https://github.com/charmbracelet/bubbles) - TUI components
 
----
+## Star History
+
+## [![Star History Chart](https://api.star-history.com/svg?repos=xdagiz/xytz&type=date&legend=top-left)](https://www.star-history.com/#xdagiz/xytz&type=date&legend=top-left)
 
 By [xdagiz](https://github.com/xdagiz)
