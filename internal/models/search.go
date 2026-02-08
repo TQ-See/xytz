@@ -23,6 +23,9 @@ import (
 type CLIOptions struct {
 	SearchLimit int
 	SortBy      string
+	Query       string
+	Channel     string
+	Playlist    string
 }
 
 type SearchModel struct {
@@ -38,6 +41,7 @@ type SearchModel struct {
 	SortBy          types.SortBy
 	SearchLimit     int
 	DownloadOptions []types.DownloadOption
+	Options         *CLIOptions
 	HasFFmpeg       bool
 }
 
@@ -97,6 +101,7 @@ func NewSearchModelWithOptions(opts *CLIOptions) SearchModel {
 		SortBy:          defaultSort,
 		SearchLimit:     searchLimit,
 		DownloadOptions: options,
+		Options:         opts,
 		HasFFmpeg:       hasFFmpeg,
 	}
 }

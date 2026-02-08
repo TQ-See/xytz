@@ -1,9 +1,12 @@
 package app
 
 import (
+	"strings"
+
 	"github.com/xdagiz/xytz/internal/models"
 	"github.com/xdagiz/xytz/internal/styles"
 	"github.com/xdagiz/xytz/internal/types"
+	"github.com/xdagiz/xytz/internal/utils"
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
@@ -28,7 +31,62 @@ type Model struct {
 }
 
 func (m *Model) Init() tea.Cmd {
-	return tea.Batch(m.Search.Init(), m.Spinner.Tick, m.Download.Init())
+	opts := m.Search.Options
+	var cmd tea.Cmd
+
+	if opts != nil {
+		if opts.Channel != "" {
+			m.State = types.StateLoading
+			m.LoadingType = "channel"
+			m.VideoList.IsChannelSearch = true
+			m.VideoList.IsPlaylistSearch = false
+			m.VideoList.ChannelName = opts.Channel
+			m.VideoList.PlaylistURL = ""
+			cmd = utils.PerformChannelSearch(opts.Channel, m.Search.SearchLimit)
+		}
+
+		if opts.Query != "" {
+			m.State = types.StateLoading
+			m.LoadingType = "search"
+			m.CurrentQuery = opts.Query
+			m.VideoList.IsChannelSearch = false
+			m.VideoList.IsPlaylistSearch = false
+			m.VideoList.ChannelName = ""
+			m.VideoList.PlaylistName = ""
+			m.VideoList.PlaylistURL = ""
+			cmd = utils.PerformSearch(opts.Query, m.Search.SortBy.GetSPParam(), m.Search.SearchLimit)
+		}
+
+		if opts.Playlist != "" {
+			m.State = types.StateLoading
+			m.LoadingType = "playlist"
+			m.CurrentQuery = opts.Playlist
+			m.VideoList.IsPlaylistSearch = true
+			m.VideoList.IsChannelSearch = false
+			m.VideoList.PlaylistName = opts.Playlist
+
+			if strings.Contains(opts.Playlist, "https://www.youtube.com/playlist?list=") {
+				m.VideoList.PlaylistURL = opts.Playlist
+			} else if strings.Contains(opts.Playlist, "watch?v=") && strings.Contains(opts.Playlist, "list=") {
+				parts := strings.Split(opts.Playlist, "list=")
+				if len(parts) > 1 {
+					playlistID := parts[1]
+					if idx := strings.Index(playlistID, "&"); idx != -1 {
+						playlistID = playlistID[:idx]
+					}
+					m.VideoList.PlaylistURL = "https://www.youtube.com/playlist?list=" + playlistID
+				} else {
+					m.VideoList.PlaylistURL = "https://www.youtube.com/playlist?list=" + opts.Playlist
+				}
+			} else {
+				m.VideoList.PlaylistURL = "https://www.youtube.com/playlist?list=" + opts.Playlist
+			}
+
+			cmd = utils.PerformPlaylistSearch(m.VideoList.PlaylistURL, m.Search.SearchLimit)
+		}
+	}
+
+	return tea.Batch(m.Search.Init(), m.Spinner.Tick, m.Download.Init(), cmd)
 }
 
 func NewModel() *Model {

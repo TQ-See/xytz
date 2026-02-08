@@ -145,6 +145,12 @@ install() {
   info "xytz v$version installed to $binary_path"
   echo ""
 
+  info "Verifying installation..."
+  if ! "$binary_path" --help >/dev/null 2>&1; then
+    error "Installation verification failed. Binary may be corrupted or incompatible."
+  fi
+  info "Verification successful!"
+
   add_to_path "$install_dir"
 }
 

@@ -17,6 +17,9 @@ import (
 var (
 	searchLimit int
 	sortBy      string
+	query       string
+	channel     string
+	playlist    string
 
 	rootCmd = &cobra.Command{
 		Use:   "xytz",
@@ -44,6 +47,9 @@ func startApp() {
 	opts := &models.CLIOptions{
 		SearchLimit: searchLimit,
 		SortBy:      sortBy,
+		Query:       query,
+		Channel:     channel,
+		Playlist:    playlist,
 	}
 
 	zone.NewGlobal()
@@ -120,11 +126,13 @@ func init() {
 		cfg = config.GetDefault()
 	}
 
-	rootCmd.Flags().IntVarP(&searchLimit, "number", "n", cfg.SearchLimit,
-		"Number of search results")
+	rootCmd.Flags().IntVarP(&searchLimit, "number", "n", cfg.SearchLimit, "Number of search results")
 
-	rootCmd.Flags().StringVarP(&sortBy, "sort-by", "s", cfg.SortByDefault,
-		"Default sort option (relevance, date, views, rating)")
+	rootCmd.Flags().StringVarP(&sortBy, "sort-by", "s", cfg.SortByDefault, "Default sort option (relevance, date, views, rating)")
 
 	rootCmd.Flags().BoolP("help", "h", false, "help for xytz")
+
+	rootCmd.Flags().StringVarP(&query, "query", "q", "", "Direct search with a query")
+	rootCmd.Flags().StringVarP(&channel, "channel", "c", "", "Direct channel search")
+	rootCmd.Flags().StringVarP(&playlist, "playlist", "p", "", "Direct playlist search")
 }
