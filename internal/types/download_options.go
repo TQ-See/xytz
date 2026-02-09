@@ -13,7 +13,7 @@ type DownloadOption struct {
 func DownloadOptions() []DownloadOption {
 	return []DownloadOption{
 		{
-			Name:           "Add subtitles",
+			Name:           "Add Subtitles",
 			KeyBinding:     tea.KeyCtrlS,
 			ConfigField:    "EmbedSubtitles",
 			RequiresFFmpeg: true,

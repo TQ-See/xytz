@@ -86,5 +86,6 @@ func NewListDelegate() list.DefaultDelegate {
 	dl.Styles.SelectedDesc = ListSelectedDescStyle
 	dl.Styles.DimmedTitle = ListDimmedTitle
 	dl.Styles.DimmedDesc = ListDimmedDesc
+
 	return dl
 }

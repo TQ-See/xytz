@@ -23,10 +23,12 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.VideoList = m.VideoList.HandleResize(m.Width, m.Height)
 		m.FormatList = m.FormatList.HandleResize(m.Width, m.Height)
 		m.Download = m.Download.HandleResize(m.Width, m.Height)
+
 	case spinner.TickMsg:
 		var spinnerCmd tea.Cmd
 		m.Spinner, spinnerCmd = m.Spinner.Update(msg)
 		return m, spinnerCmd
+
 	case types.StartSearchMsg:
 		m.State = types.StateLoading
 		m.LoadingType = "search"
@@ -39,6 +41,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmd = utils.PerformSearch(m.SearchManager, msg.Query, m.Search.SortBy.GetSPParam(), m.Search.SearchLimit)
 		m.ErrMsg = ""
 		m.Search.Input.SetValue("")
+
 	case types.StartFormatMsg:
 		m.State = types.StateLoading
 		m.LoadingType = "format"
@@ -49,6 +52,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.FormatList.ResetTab()
 		cmd = utils.FetchFormats(m.FormatsManager, msg.URL)
 		m.ErrMsg = ""
+
 	case types.SearchResultMsg:
 		m.LoadingType = ""
 		m.Videos = msg.Videos
@@ -67,6 +71,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.State = types.StateFormatList
 		m.ErrMsg = msg.Err
 		return m, nil
+
 	case types.StartDownloadMsg:
 		m.State = types.StateDownload
 		m.Download.Completed = false
@@ -87,6 +92,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.LoadingType = "download"
 		cmd = utils.StartDownload(m.DownloadManager, m.Program, msg.URL, msg.FormatID, msg.Title, m.Search.DownloadOptions)
 		return m, cmd
+
 	case types.DownloadResultMsg:
 		m.LoadingType = ""
 		if msg.Err != "" {
@@ -106,12 +112,15 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Download.CurrentSpeed = ""
 		m.Download.CurrentETA = ""
 		return m, nil
+
 	case types.PauseDownloadMsg:
 		m.Download.Paused = true
 		return m, nil
+
 	case types.ResumeDownloadMsg:
 		m.Download.Paused = false
 		return m, nil
+
 	case types.CancelDownloadMsg:
 		m.Download.Cancelled = true
 		if m.SelectedVideo.ID == "" {
@@ -123,17 +132,20 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.FormatList.List.ResetSelected()
 		cmd = utils.CancelDownload(m.DownloadManager)
 		return m, cmd
+
 	case types.CancelSearchMsg:
 		m.State = types.StateSearchInput
 		m.LoadingType = ""
 		m.ErrMsg = "Search cancelled"
 		return m, nil
+
 	case types.CancelFormatsMsg:
 		m.State = types.StateVideoList
 		m.LoadingType = ""
 		m.ErrMsg = ""
 		m.FormatList.List.ResetSelected()
 		return m, nil
+
 	case types.StartChannelURLMsg:
 		m.State = types.StateLoading
 		m.LoadingType = "channel"
@@ -144,6 +156,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmd = utils.PerformChannelSearch(m.SearchManager, msg.ChannelName, m.Search.SearchLimit)
 		m.ErrMsg = ""
 		return m, cmd
+
 	case types.StartPlaylistURLMsg:
 		m.State = types.StateLoading
 		m.LoadingType = "playlist"
@@ -170,6 +183,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmd = utils.PerformPlaylistSearch(m.SearchManager, msg.Query, m.Search.SearchLimit)
 		m.ErrMsg = ""
 		return m, cmd
+
 	case types.BackFromVideoListMsg:
 		m.State = types.StateSearchInput
 		m.ErrMsg = ""
@@ -178,14 +192,17 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.VideoList.ErrMsg = ""
 		m.VideoList.PlaylistURL = ""
 		return m, nil
+
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyCtrlC:
 			return m, tea.Quit
 		}
+
 		switch m.State {
 		case types.StateSearchInput:
 			m.Search, cmd = m.Search.Update(msg)
+
 		case types.StateLoading:
 			switch msg.String() {
 			case "c", "esc":
@@ -196,6 +213,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					cmd = utils.CancelSearch(m.SearchManager)
 				}
 			}
+
 		case types.StateVideoList:
 			switch msg.String() {
 			case "b", "esc":
@@ -210,6 +228,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 			m.VideoList, cmd = m.VideoList.Update(msg)
+
 		case types.StateFormatList:
 			switch msg.String() {
 			case "b", "esc":
@@ -229,6 +248,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 			m.FormatList, cmd = m.FormatList.Update(msg)
+
 		case types.StateDownload:
 			switch msg.String() {
 			case "b":
@@ -240,11 +260,13 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 		}
+
 	case tea.MouseMsg:
 		switch m.State {
 		case types.StateSearchInput:
 			m.Search, cmd = m.Search.Update(msg)
 		}
+
 	case list.FilterMatchesMsg:
 		switch m.State {
 		case types.StateSearchInput:
@@ -254,6 +276,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case types.StateFormatList:
 			m.FormatList, cmd = m.FormatList.Update(msg)
 		}
+
 		return m, cmd
 	}
 

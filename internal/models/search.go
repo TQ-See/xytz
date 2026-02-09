@@ -303,11 +303,13 @@ func (m SearchModel) Update(msg tea.Msg) (SearchModel, tea.Cmd) {
 			}
 		}
 		return m, nil
+
 	case list.FilterMatchesMsg:
 		if m.ResumeList.Visible {
 			m.ResumeList.List, cmd = m.ResumeList.List.Update(msg)
 		}
 		return m, cmd
+
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyEnter:
@@ -343,8 +345,10 @@ func (m SearchModel) Update(msg tea.Msg) (SearchModel, tea.Cmd) {
 					return types.StartSearchMsg{Query: query}
 				}
 			}
+
 		case tea.KeyBackspace:
 			m.updateAutocompleteFilter()
+
 		case tea.KeyRunes:
 			if string(msg.Runes) == "/" && !m.Autocomplete.Visible && !m.ResumeList.Visible {
 				currentValue := m.Input.Value()
@@ -354,22 +358,27 @@ func (m SearchModel) Update(msg tea.Msg) (SearchModel, tea.Cmd) {
 			} else if m.Autocomplete.Visible {
 				m.updateAutocompleteFilter()
 			}
+
 		case tea.KeyUp, tea.KeyCtrlP:
 			if !m.ResumeList.Visible {
 				m.navigateHistory(1)
 				m.Input.CursorEnd()
 			}
+
 		case tea.KeyDown, tea.KeyCtrlN:
 			if !m.ResumeList.Visible {
 				m.navigateHistory(-1)
 				m.Input.CursorEnd()
 			}
+
 		case tea.KeyTab:
 			m.SortBy = m.SortBy.Next()
 			return m, nil
+
 		case tea.KeyShiftTab:
 			m.SortBy = m.SortBy.Prev()
 			return m, nil
+
 		case tea.KeyCtrlS, tea.KeyCtrlJ, tea.KeyCtrlL:
 			for i := range m.DownloadOptions {
 				if m.DownloadOptions[i].KeyBinding == msg.Type {
@@ -380,6 +389,7 @@ func (m SearchModel) Update(msg tea.Msg) (SearchModel, tea.Cmd) {
 					return m, nil
 				}
 			}
+
 		case tea.KeyCtrlO:
 			openGithub()
 		}
@@ -433,6 +443,7 @@ func (m *SearchModel) executeSlashCommand(slashCmd, query, args string) tea.Cmd 
 				return types.StartChannelURLMsg{ChannelName: channelName}
 			}
 		}
+
 	case "playlist":
 		if args == "" {
 			m.Input.SetValue("/playlist ")
@@ -443,9 +454,11 @@ func (m *SearchModel) executeSlashCommand(slashCmd, query, args string) tea.Cmd 
 				return types.StartPlaylistURLMsg{Query: args}
 			}
 		}
+
 	case "resume":
 		m.ResumeList.Show()
 		m.Input.SetValue("")
+
 	case "help":
 		m.Help.Toggle()
 		m.Input.SetValue("")

@@ -53,11 +53,11 @@ func NewFormatListModel() FormatListModel {
 
 	ti := textinput.New()
 	ti.Placeholder = "Enter format id (e.g. 140+137 or bestvideo+bestaudio)"
-	ti.Focus()
 	ti.Prompt = "❯ "
 	ti.PromptStyle = styles.FormatCustomInputPrompt
 	ti.PlaceholderStyle = ti.PlaceholderStyle.Foreground(styles.MutedColor)
 	ti.TextStyle = ti.TextStyle.Foreground(styles.SecondaryColor)
+	ti.Focus()
 
 	return FormatListModel{
 		List:         li,
@@ -183,6 +183,7 @@ func (m FormatListModel) Update(msg tea.Msg) (FormatListModel, tea.Cmd) {
 			m.prevTab()
 			return m, nil
 		}
+
 		switch msg.Type {
 		case tea.KeyEnter:
 			if m.ActiveTab == FormatTabCustom {

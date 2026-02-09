@@ -92,7 +92,11 @@ func (m VideoListModel) HandleResize(w, h int) VideoListModel {
 }
 
 func (m VideoListModel) Update(msg tea.Msg) (VideoListModel, tea.Cmd) {
-	var cmd tea.Cmd
+	var (
+		cmd     tea.Cmd
+		listCmd tea.Cmd
+	)
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.Type {
@@ -136,7 +140,6 @@ func (m VideoListModel) Update(msg tea.Msg) (VideoListModel, tea.Cmd) {
 		}
 	}
 
-	var listCmd tea.Cmd
 	m.List, listCmd = m.List.Update(msg)
 	return m, tea.Batch(cmd, listCmd)
 }

@@ -100,6 +100,7 @@ func (m HelpModel) Update(msg tea.Msg) (HelpModel, tea.Cmd) {
 			if m.ActiveTab < 0 {
 				m.ActiveTab = len(m.Tabs) - 1
 			}
+
 		case key.Matches(msg, m.Keys.Next):
 			m.ActiveTab++
 			if m.ActiveTab >= len(m.Tabs) {

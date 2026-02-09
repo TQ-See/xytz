@@ -2,13 +2,13 @@ package config
 
 func GetDefault() *Config {
 	return &Config{
-		SearchLimit:         25,
-		DefaultDownloadPath: "~/Videos",
-		DefaultFormat:       "bestvideo+bestaudio/best",
-		SortByDefault:       "relevance",
-		EmbedSubtitles:      false,
-		EmbedMetadata:       true,
-		EmbedChapters:       true,
+		SearchLimit:         DefaultSearchLimit,
+		DefaultDownloadPath: DefaultDownloadPath,
+		DefaultFormat:       DefaultFormat,
+		SortByDefault:       DefaultSortBy,
+		EmbedSubtitles:      DefaultEmbedSubtitles,
+		EmbedMetadata:       DefaultEmbedMetadata,
+		EmbedChapters:       DefaultEmbedChapters,
 	}
 }
 

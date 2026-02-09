@@ -95,7 +95,7 @@ func ParseVideoItem(line string) (types.VideoItem, error) {
 	}
 
 	channel, ok := data["uploader"].(string)
-	if channel == "" {
+	if !ok || channel == "" {
 		if playlistUploader, ok := data["playlist_uploader"].(string); ok && playlistUploader != "" {
 			channel = playlistUploader
 		}

@@ -70,6 +70,7 @@ func (m *FormatAutocompleteModel) UpdateFilteredFormats(query string, allFormats
 		for i, f := range specialFormats {
 			results[i] = FormatMatchResult{Format: f, Score: 1000}
 		}
+
 		m.Filtered = results
 		return
 	}
@@ -209,9 +210,11 @@ func (m *FormatAutocompleteModel) Update(msg tea.Msg) (bool, tea.Cmd) {
 		case key.Matches(msg, m.Keys.Up):
 			m.Prev()
 			return true, nil
+
 		case key.Matches(msg, m.Keys.Down):
 			m.Next()
 			return true, nil
+
 		case key.Matches(msg, m.Keys.Select):
 			return true, nil
 		}

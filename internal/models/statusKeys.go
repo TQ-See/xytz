@@ -44,16 +44,19 @@ func GetStatusKeys(state types.State, helpVisible bool, resumeVisible bool) Stat
 				key.WithHelp("Del/Ctrl+d", "delete"),
 			)
 		}
+
 	case types.StateVideoList:
 		keys.Back = key.NewBinding(
 			key.WithKeys("esc", "b"),
 			key.WithHelp("Esc/b", "back"),
 		)
+
 	case types.StateFormatList:
 		keys.Back = key.NewBinding(
 			key.WithKeys("esc", "b"),
 			key.WithHelp("Esc/b", "back"),
 		)
+
 	case types.StateDownload:
 		keys.Back = key.NewBinding(
 			key.WithKeys("b"),

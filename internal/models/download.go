@@ -50,6 +50,7 @@ func (m DownloadModel) Init() tea.Cmd {
 
 func (m DownloadModel) Update(msg tea.Msg) (DownloadModel, tea.Cmd) {
 	var cmd tea.Cmd
+
 	switch msg := msg.(type) {
 	case types.ProgressMsg:
 		cmd = m.Progress.SetPercent(msg.Percent / 100.0)
@@ -59,18 +60,23 @@ func (m DownloadModel) Update(msg tea.Msg) (DownloadModel, tea.Cmd) {
 		if msg.Destination != "" {
 			m.FileDestination = msg.Destination
 		}
+
 	case types.PauseDownloadMsg:
 		m.Paused = true
+
 	case types.ResumeDownloadMsg:
 		m.Paused = false
+
 	case types.CancelDownloadMsg:
 		m.Cancelled = true
+
 	case tea.KeyMsg:
 		if m.Completed || m.Cancelled && msg.Type == tea.KeyEnter {
 			cmd = func() tea.Msg {
 				return types.DownloadCompleteMsg{}
 			}
 		}
+
 		if !m.Completed && !m.Cancelled {
 			switch msg.String() {
 			case "p", " ":
@@ -101,6 +107,7 @@ func (m DownloadModel) HandleResize(w, h int) DownloadModel {
 	} else {
 		m.Progress.Width = w - 10
 	}
+
 	return m
 }
 

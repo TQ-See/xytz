@@ -418,6 +418,7 @@ func CancelFormats(fm *FormatsManager) tea.Cmd {
 		if err := fm.Cancel(); err != nil {
 			log.Printf("Failed to cancel formats: %v", err)
 		}
+
 		return types.CancelFormatsMsg{}
 	})
 }
