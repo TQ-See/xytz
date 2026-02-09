@@ -71,15 +71,8 @@ func SaveHistory(query string) error {
 		newHistory = newHistory[:1000]
 	}
 
-	var sb strings.Builder
-	for i, entry := range newHistory {
-		sb.WriteString(entry)
-		if i < len(newHistory)-1 {
-			sb.WriteString("\n")
-		}
-	}
-
-	return os.WriteFile(path, []byte(sb.String()), 0644)
+	content := strings.Join(newHistory, "\n")
+	return os.WriteFile(path, []byte(content), 0644)
 }
 
 func AddToHistory(query string) error {

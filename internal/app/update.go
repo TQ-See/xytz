@@ -36,7 +36,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.VideoList.ChannelName = ""
 		m.VideoList.PlaylistName = ""
 		m.VideoList.PlaylistURL = ""
-		cmd = utils.PerformSearch(msg.Query, m.Search.SortBy.GetSPParam(), m.Search.SearchLimit)
+		cmd = utils.PerformSearch(m.SearchManager, msg.Query, m.Search.SortBy.GetSPParam(), m.Search.SearchLimit)
 		m.ErrMsg = ""
 		m.Search.Input.SetValue("")
 	case types.StartFormatMsg:
@@ -47,7 +47,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.SelectedVideo = msg.SelectedVideo
 		m.FormatList.DownloadOptions = m.Search.DownloadOptions
 		m.FormatList.ResetTab()
-		cmd = utils.FetchFormats(msg.URL)
+		cmd = utils.FetchFormats(m.FormatsManager, msg.URL)
 		m.ErrMsg = ""
 	case types.SearchResultMsg:
 		m.LoadingType = ""
@@ -77,7 +77,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.Download.SelectedVideo = m.SelectedVideo
 		}
 		m.LoadingType = "download"
-		cmd = utils.StartDownload(m.Program, msg.URL, msg.FormatID, m.SelectedVideo.Title(), m.Search.DownloadOptions)
+		cmd = utils.StartDownload(m.DownloadManager, m.Program, msg.URL, msg.FormatID, m.SelectedVideo.Title(), m.Search.DownloadOptions)
 		return m, cmd
 	case types.StartResumeDownloadMsg:
 		m.State = types.StateDownload
@@ -85,7 +85,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Download.Cancelled = false
 		m.Download.SelectedVideo = types.VideoItem{VideoTitle: msg.Title}
 		m.LoadingType = "download"
-		cmd = utils.StartDownload(m.Program, msg.URL, msg.FormatID, msg.Title, m.Search.DownloadOptions)
+		cmd = utils.StartDownload(m.DownloadManager, m.Program, msg.URL, msg.FormatID, msg.Title, m.Search.DownloadOptions)
 		return m, cmd
 	case types.DownloadResultMsg:
 		m.LoadingType = ""
@@ -121,7 +121,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.ErrMsg = "Download cancelled"
 		m.FormatList.List.ResetSelected()
-		return m, nil
+		cmd = utils.CancelDownload(m.DownloadManager)
+		return m, cmd
 	case types.CancelSearchMsg:
 		m.State = types.StateSearchInput
 		m.LoadingType = ""
@@ -140,7 +141,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.VideoList.IsPlaylistSearch = false
 		m.VideoList.ChannelName = msg.ChannelName
 		m.VideoList.PlaylistURL = ""
-		cmd = utils.PerformChannelSearch(msg.ChannelName, m.Search.SearchLimit)
+		cmd = utils.PerformChannelSearch(m.SearchManager, msg.ChannelName, m.Search.SearchLimit)
 		m.ErrMsg = ""
 		return m, cmd
 	case types.StartPlaylistURLMsg:
@@ -166,7 +167,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			m.VideoList.PlaylistURL = "https://www.youtube.com/playlist?list=" + msg.Query
 		}
-		cmd = utils.PerformPlaylistSearch(msg.Query, m.Search.SearchLimit)
+		cmd = utils.PerformPlaylistSearch(m.SearchManager, msg.Query, m.Search.SearchLimit)
 		m.ErrMsg = ""
 		return m, cmd
 	case types.BackFromVideoListMsg:
@@ -190,9 +191,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "c", "esc":
 				switch m.LoadingType {
 				case "format":
-					cmd = utils.CancelFormats()
+					cmd = utils.CancelFormats(m.FormatsManager)
 				default:
-					cmd = utils.CancelSearch()
+					cmd = utils.CancelSearch(m.SearchManager)
 				}
 			}
 		case types.StateVideoList:

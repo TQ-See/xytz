@@ -14,23 +14,27 @@ import (
 )
 
 type Model struct {
-	Program       *tea.Program
-	Search        models.SearchModel
-	State         types.State
-	Width         int
-	Height        int
-	Spinner       spinner.Model
-	LoadingType   string
-	CurrentQuery  string
-	Videos        []list.Item
-	VideoList     models.VideoListModel
-	FormatList    models.FormatListModel
-	Download      models.DownloadModel
-	SelectedVideo types.VideoItem
-	ErrMsg        string
+	Program         *tea.Program
+	Search          models.SearchModel
+	State           types.State
+	Width           int
+	Height          int
+	Spinner         spinner.Model
+	LoadingType     string
+	CurrentQuery    string
+	Videos          []list.Item
+	VideoList       models.VideoListModel
+	FormatList      models.FormatListModel
+	Download        models.DownloadModel
+	SelectedVideo   types.VideoItem
+	ErrMsg          string
+	SearchManager   *utils.SearchManager
+	FormatsManager  *utils.FormatsManager
+	DownloadManager *utils.DownloadManager
 }
 
 func (m *Model) Init() tea.Cmd {
+	m.InitDownloadManager()
 	opts := m.Search.Options
 	var cmd tea.Cmd
 
@@ -42,7 +46,7 @@ func (m *Model) Init() tea.Cmd {
 			m.VideoList.IsPlaylistSearch = false
 			m.VideoList.ChannelName = opts.Channel
 			m.VideoList.PlaylistURL = ""
-			cmd = utils.PerformChannelSearch(opts.Channel, m.Search.SearchLimit)
+			cmd = utils.PerformChannelSearch(m.SearchManager, opts.Channel, m.Search.SearchLimit)
 		}
 
 		if opts.Query != "" {
@@ -54,7 +58,7 @@ func (m *Model) Init() tea.Cmd {
 			m.VideoList.ChannelName = ""
 			m.VideoList.PlaylistName = ""
 			m.VideoList.PlaylistURL = ""
-			cmd = utils.PerformSearch(opts.Query, m.Search.SortBy.GetSPParam(), m.Search.SearchLimit)
+			cmd = utils.PerformSearch(m.SearchManager, opts.Query, m.Search.SortBy.GetSPParam(), m.Search.SearchLimit)
 		}
 
 		if opts.Playlist != "" {
@@ -82,11 +86,15 @@ func (m *Model) Init() tea.Cmd {
 				m.VideoList.PlaylistURL = "https://www.youtube.com/playlist?list=" + opts.Playlist
 			}
 
-			cmd = utils.PerformPlaylistSearch(m.VideoList.PlaylistURL, m.Search.SearchLimit)
+			cmd = utils.PerformPlaylistSearch(m.SearchManager, m.VideoList.PlaylistURL, m.Search.SearchLimit)
 		}
 	}
 
 	return tea.Batch(m.Search.Init(), m.Spinner.Tick, m.Download.Init(), cmd)
+}
+
+func (m *Model) InitDownloadManager() {
+	m.Download.DownloadManager = m.DownloadManager
 }
 
 func NewModel() *Model {
@@ -95,12 +103,15 @@ func NewModel() *Model {
 	sp.Style = sp.Style.Foreground(styles.PinkColor)
 
 	return &Model{
-		State:      types.StateSearchInput,
-		Spinner:    sp,
-		Search:     models.NewSearchModel(),
-		VideoList:  models.NewVideoListModel(),
-		FormatList: models.NewFormatListModel(),
-		Download:   models.NewDownloadModel(),
+		State:           types.StateSearchInput,
+		Spinner:         sp,
+		Search:          models.NewSearchModel(),
+		VideoList:       models.NewVideoListModel(),
+		FormatList:      models.NewFormatListModel(),
+		Download:        models.NewDownloadModel(),
+		SearchManager:   utils.NewSearchManager(),
+		FormatsManager:  utils.NewFormatsManager(),
+		DownloadManager: utils.NewDownloadManager(),
 	}
 }
 
@@ -110,11 +121,14 @@ func NewModelWithOptions(opts *models.CLIOptions) *Model {
 	sp.Style = sp.Style.Foreground(styles.PinkColor)
 
 	return &Model{
-		State:      types.StateSearchInput,
-		Spinner:    sp,
-		Search:     models.NewSearchModelWithOptions(opts),
-		VideoList:  models.NewVideoListModel(),
-		FormatList: models.NewFormatListModel(),
-		Download:   models.NewDownloadModel(),
+		State:           types.StateSearchInput,
+		Spinner:         sp,
+		Search:          models.NewSearchModelWithOptions(opts),
+		VideoList:       models.NewVideoListModel(),
+		FormatList:      models.NewFormatListModel(),
+		Download:        models.NewDownloadModel(),
+		SearchManager:   utils.NewSearchManager(),
+		FormatsManager:  utils.NewFormatsManager(),
+		DownloadManager: utils.NewDownloadManager(),
 	}
 }

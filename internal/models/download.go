@@ -26,6 +26,7 @@ type DownloadModel struct {
 	Cancelled       bool
 	Destination     string
 	FileDestination string
+	DownloadManager *utils.DownloadManager
 }
 
 func NewDownloadModel() DownloadModel {
@@ -35,8 +36,9 @@ func NewDownloadModel() DownloadModel {
 	destination := cfg.GetDownloadPath()
 
 	return DownloadModel{
-		Progress:    pr,
-		Destination: destination,
+		Progress:        pr,
+		Destination:     destination,
+		DownloadManager: utils.NewDownloadManager(),
 	}
 }
 
@@ -73,12 +75,14 @@ func (m DownloadModel) Update(msg tea.Msg) (DownloadModel, tea.Cmd) {
 			switch msg.String() {
 			case "p", " ":
 				if m.Paused {
-					cmd = utils.ResumeDownload()
+					cmd = utils.ResumeDownload(m.DownloadManager)
 				} else {
-					cmd = utils.PauseDownload()
+					cmd = utils.PauseDownload(m.DownloadManager)
 				}
 			case "c", "esc":
-				cmd = utils.CancelDownload()
+				cmd = func() tea.Msg {
+					return types.CancelDownloadMsg{}
+				}
 			}
 		}
 	}

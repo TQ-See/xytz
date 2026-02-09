@@ -11,14 +11,12 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func PauseDownload() tea.Cmd {
+func PauseDownload(dm *DownloadManager) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
-		downloadMutex.Lock()
-		defer downloadMutex.Unlock()
-
-		if currentCmd != nil && currentCmd.Process != nil && !isPaused {
-			isPaused = true
-			if err := currentCmd.Process.Signal(syscall.SIGSTOP); err != nil {
+		cmd := dm.GetCmd()
+		if cmd != nil && cmd.Process != nil && !dm.IsPaused() {
+			dm.SetPaused(true)
+			if err := cmd.Process.Signal(syscall.SIGSTOP); err != nil {
 				log.Printf("Failed to pause download: %v", err)
 			}
 		}
@@ -27,14 +25,12 @@ func PauseDownload() tea.Cmd {
 	})
 }
 
-func ResumeDownload() tea.Cmd {
+func ResumeDownload(dm *DownloadManager) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
-		downloadMutex.Lock()
-		defer downloadMutex.Unlock()
-
-		if currentCmd != nil && currentCmd.Process != nil && isPaused {
-			isPaused = false
-			if err := currentCmd.Process.Signal(syscall.SIGCONT); err != nil {
+		cmd := dm.GetCmd()
+		if cmd != nil && cmd.Process != nil && dm.IsPaused() {
+			dm.SetPaused(false)
+			if err := cmd.Process.Signal(syscall.SIGCONT); err != nil {
 				log.Printf("Failed to resume download: %v", err)
 			}
 		}

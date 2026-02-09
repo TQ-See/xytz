@@ -17,15 +17,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-var (
-	currentCmd    *exec.Cmd
-	currentCtx    context.Context
-	currentCancel context.CancelFunc
-	downloadMutex sync.Mutex
-	isPaused      bool
-)
-
-func StartDownload(program *tea.Program, url, formatID string, title string, options []types.DownloadOption) tea.Cmd {
+func StartDownload(dm *DownloadManager, program *tea.Program, url, formatID string, title string, options []types.DownloadOption) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
 		unfinished := UnfinishedDownload{
 			URL:       url,
@@ -42,36 +34,27 @@ func StartDownload(program *tea.Program, url, formatID string, title string, opt
 		if err != nil {
 			cfg = config.GetDefault()
 		}
+
 		downloadPath := cfg.GetDownloadPath()
-		go doDownload(program, url, formatID, downloadPath, cfg.YTDLPPath, options)
+		go doDownload(dm, program, url, formatID, downloadPath, cfg.YTDLPPath, options)
 
 		return nil
 	})
 }
 
-func CancelDownload() tea.Cmd {
+func CancelDownload(dm *DownloadManager) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
-		downloadMutex.Lock()
-		defer downloadMutex.Unlock()
-
-		if currentCancel != nil {
-			currentCancel()
-		}
-
-		if currentCmd != nil && currentCmd.Process != nil {
-			if err := currentCmd.Process.Kill(); err != nil {
-				log.Printf("Failed to kill download process: %v", err)
-			}
+		if err := dm.Cancel(); err != nil {
+			log.Printf("Failed to cancel download: %v", err)
 		}
 
 		return types.CancelDownloadMsg{}
 	})
 }
 
-func doDownload(program *tea.Program, url, formatID, outputPath, ytDlpPath string, options []types.DownloadOption) {
-	downloadMutex.Lock()
-	currentCtx, currentCancel = context.WithCancel(context.Background())
-	downloadMutex.Unlock()
+func doDownload(dm *DownloadManager, program *tea.Program, url, formatID, outputPath, ytDlpPath string, options []types.DownloadOption) {
+	ctx, cancel := context.WithCancel(context.Background())
+	dm.SetContext(ctx, cancel)
 
 	if ytDlpPath == "" {
 		ytDlpPath = "yt-dlp"
@@ -113,12 +96,10 @@ func doDownload(program *tea.Program, url, formatID, outputPath, ytDlpPath strin
 		}
 	}
 
-	cmd := exec.CommandContext(currentCtx, ytDlpPath, args...)
+	cmd := exec.CommandContext(ctx, ytDlpPath, args...)
 
-	downloadMutex.Lock()
-	currentCmd = cmd
-	isPaused = false
-	downloadMutex.Unlock()
+	dm.SetCmd(cmd)
+	dm.SetPaused(false)
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -170,13 +151,9 @@ func doDownload(program *tea.Program, url, formatID, outputPath, ytDlpPath strin
 		}
 	}
 
-	downloadMutex.Lock()
-	currentCmd = nil
-	currentCancel = nil
-	isPaused = false
-	downloadMutex.Unlock()
+	dm.Clear()
 
-	if currentCtx.Err() == context.Canceled {
+	if ctx.Err() == context.Canceled {
 		program.Send(types.DownloadResultMsg{Err: "Download cancelled"})
 		return
 	}

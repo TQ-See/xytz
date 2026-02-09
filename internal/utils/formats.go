@@ -8,19 +8,12 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/xdagiz/xytz/internal/config"
 	"github.com/xdagiz/xytz/internal/types"
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
-)
-
-var (
-	formatsCmd      *exec.Cmd
-	formatsMutex    sync.Mutex
-	formatsCanceled bool
 )
 
 func formatQuality(resolution string) string {
@@ -106,7 +99,7 @@ func getPreferredAudioFormat(formatsAny []any) (audioID string, audioLang string
 	return audioID, audioLang
 }
 
-func FetchFormats(url string) tea.Cmd {
+func FetchFormats(fm *FormatsManager, url string) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
 		cfg, err := config.Load()
 		if err != nil {
@@ -118,9 +111,7 @@ func FetchFormats(url string) tea.Cmd {
 		}
 		cmd := exec.Command(ytDlpPath, "-J", url)
 
-		formatsMutex.Lock()
-		formatsCmd = cmd
-		formatsMutex.Unlock()
+		fm.SetCmd(cmd)
 
 		stdout, err := cmd.StdoutPipe()
 		if err != nil {
@@ -129,9 +120,7 @@ func FetchFormats(url string) tea.Cmd {
 		}
 
 		if err := cmd.Start(); err != nil {
-			formatsMutex.Lock()
-			formatsCmd = nil
-			formatsMutex.Unlock()
+			fm.Clear()
 			errMsg := fmt.Sprintf("Format fetch error: %v", err)
 			return types.FormatResultMsg{Err: errMsg}
 		}
@@ -141,11 +130,8 @@ func FetchFormats(url string) tea.Cmd {
 			log.Printf("failed to close formats stdout: %v", err)
 		}
 
-		formatsMutex.Lock()
-		wasCancelled := formatsCanceled
-		formatsCanceled = false
-		formatsCmd = nil
-		formatsMutex.Unlock()
+		wasCancelled := fm.WasCanceled()
+		fm.Clear()
 
 		if wasCancelled {
 			return nil
@@ -402,18 +388,11 @@ func extractVideoInfo(data map[string]any) types.VideoItem {
 	}
 }
 
-func CancelFormats() tea.Cmd {
+func CancelFormats(fm *FormatsManager) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
-		formatsMutex.Lock()
-
-		if formatsCmd != nil && formatsCmd.Process != nil {
-			formatsCanceled = true
-			if err := formatsCmd.Process.Kill(); err != nil {
-				log.Printf("Failed to kill formats process: %v", err)
-			}
+		if err := fm.Cancel(); err != nil {
+			log.Printf("Failed to cancel formats: %v", err)
 		}
-
-		formatsMutex.Unlock()
 		return types.CancelFormatsMsg{}
 	})
 }

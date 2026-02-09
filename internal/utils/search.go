@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"os/exec"
 	"strings"
-	"sync"
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
@@ -15,13 +14,7 @@ import (
 	"github.com/xdagiz/xytz/internal/types"
 )
 
-var (
-	searchCmd      *exec.Cmd
-	searchMutex    sync.Mutex
-	searchCanceled bool
-)
-
-func executeYTDLP(searchURL string, searchLimit int) any {
+func executeYTDLP(sm *SearchManager, searchURL string, searchLimit int) any {
 	cfg, err := config.Load()
 	if err != nil {
 		cfg = config.GetDefault()
@@ -53,9 +46,7 @@ func executeYTDLP(searchURL string, searchLimit int) any {
 		searchURL,
 	)
 
-	searchMutex.Lock()
-	searchCmd = cmd
-	searchMutex.Unlock()
+	sm.SetCmd(cmd)
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -116,11 +107,8 @@ func executeYTDLP(searchURL string, searchLimit int) any {
 		log.Printf("stderr output: %v", stderrLines)
 	}
 
-	searchMutex.Lock()
-	wasCancelled := searchCanceled
-	searchCanceled = false
-	searchCmd = nil
-	searchMutex.Unlock()
+	wasCancelled := sm.WasCanceled()
+	sm.Clear()
 
 	if wasCancelled {
 		return nil
@@ -143,13 +131,14 @@ func executeYTDLP(searchURL string, searchLimit int) any {
 				errMsg = "Playlist does not exist"
 			}
 		}
+
 		return types.SearchResultMsg{Err: errMsg}
 	} else {
 		return types.SearchResultMsg{Videos: videos}
 	}
 }
 
-func PerformSearch(query, sortParam string, searchLimit int) tea.Cmd {
+func PerformSearch(sm *SearchManager, query, sortParam string, searchLimit int) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
 		query = strings.TrimSpace(query)
 
@@ -162,12 +151,12 @@ func PerformSearch(query, sortParam string, searchLimit int) tea.Cmd {
 		} else {
 			encodedQuery := url.QueryEscape(query)
 			searchURL := "https://www.youtube.com/results?search_query=" + encodedQuery + "&sp=" + sortParam
-			return executeYTDLP(searchURL, searchLimit)
+			return executeYTDLP(sm, searchURL, searchLimit)
 		}
 	})
 }
 
-func PerformChannelSearch(input string, searchLimit int) tea.Cmd {
+func PerformChannelSearch(sm *SearchManager, input string, searchLimit int) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
 		var channelURL string
 
@@ -183,11 +172,11 @@ func PerformChannelSearch(input string, searchLimit int) tea.Cmd {
 			channelURL = "https://www.youtube.com/@" + encodedChannel + "/videos"
 		}
 
-		return executeYTDLP(channelURL, searchLimit)
+		return executeYTDLP(sm, channelURL, searchLimit)
 	})
 }
 
-func PerformPlaylistSearch(query string, searchLimit int) tea.Cmd {
+func PerformPlaylistSearch(sm *SearchManager, query string, searchLimit int) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
 		var playlistURL string
 
@@ -208,22 +197,16 @@ func PerformPlaylistSearch(query string, searchLimit int) tea.Cmd {
 			playlistURL = "https://www.youtube.com/playlist?list=" + query
 		}
 
-		return executeYTDLP(playlistURL, searchLimit)
+		return executeYTDLP(sm, playlistURL, searchLimit)
 	})
 }
 
-func CancelSearch() tea.Cmd {
+func CancelSearch(sm *SearchManager) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
-		searchMutex.Lock()
-
-		if searchCmd != nil && searchCmd.Process != nil {
-			searchCanceled = true
-			if err := searchCmd.Process.Kill(); err != nil {
-				log.Printf("Failed to kill search process: %v", err)
-			}
+		if err := sm.Cancel(); err != nil {
+			log.Printf("Failed to cancel search: %v", err)
 		}
 
-		searchMutex.Unlock()
 		return types.CancelSearchMsg{}
 	})
 }
