@@ -275,7 +275,7 @@ func FetchFormats(fm *FormatsManager, url string) tea.Cmd {
 			title := ext
 			if isAudioOnly {
 				if abr > 0 {
-					title = fmt.Sprintf("%s @%dk", ext, int(abr))
+					title = fmt.Sprintf("%dk", int(abr))
 				}
 			} else if isThumbnail {
 				title = formatQuality(resolution)
@@ -302,6 +302,7 @@ func FetchFormats(fm *FormatsManager, url string) tea.Cmd {
 				Language:    lang,
 				Resolution:  resolution,
 				FormatType:  formatType,
+				ABR:         abr,
 			}
 
 			allFormats = append(allFormats, formatItem)
@@ -363,6 +364,7 @@ func FetchFormats(fm *FormatsManager, url string) tea.Cmd {
 					Language:    audioLang,
 					Resolution:  resolution,
 					FormatType:  "video-only+audio-only",
+					ABR:         0,
 				}
 
 				videoFormats = append(videoFormats, preset)

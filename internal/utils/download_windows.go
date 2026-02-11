@@ -3,31 +3,29 @@
 package utils
 
 import (
+	"log"
+
 	"github.com/xdagiz/xytz/internal/types"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func PauseDownload() tea.Cmd {
+func PauseDownload(dm *DownloadManager) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
-		downloadMutex.Lock()
-		defer downloadMutex.Unlock()
-
-		if currentCmd != nil && currentCmd.Process != nil && !isPaused {
-			// Pause not supported on Windows
+		cmd := dm.GetCmd()
+		if cmd != nil && cmd.Process != nil && !dm.IsPaused() {
+			log.Print("pause not supported on windows")
 		}
 
 		return types.PauseDownloadMsg{}
 	})
 }
 
-func ResumeDownload() tea.Cmd {
+func ResumeDownload(dm *DownloadManager) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
-		downloadMutex.Lock()
-		defer downloadMutex.Unlock()
-
-		if currentCmd != nil && currentCmd.Process != nil && isPaused {
-			// Resume not supported on Windows
+		cmd := dm.GetCmd()
+		if cmd != nil && cmd.Process != nil && dm.IsPaused() {
+			log.Print("resume not supported on windows")
 		}
 
 		return types.ResumeDownloadMsg{}

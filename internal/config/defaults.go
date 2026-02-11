@@ -9,6 +9,8 @@ func GetDefault() *Config {
 		EmbedSubtitles:      DefaultEmbedSubtitles,
 		EmbedMetadata:       DefaultEmbedMetadata,
 		EmbedChapters:       DefaultEmbedChapters,
+		CookiesBrowser:      DefaultCookiesBrowser,
+		CookiesFile:         DefaultCookiesFile,
 	}
 }
 
@@ -25,3 +27,7 @@ const DefaultEmbedSubtitles = false
 const DefaultEmbedMetadata = true
 
 const DefaultEmbedChapters = true
+
+const DefaultCookiesBrowser = ""
+
+const DefaultCookiesFile = ""

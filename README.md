@@ -148,6 +148,7 @@ xytz/
 │   └── build.sh
 ├── go.mod              # Go module definition
 ├── go.sum              # Go dependencies
+├── install.sh          # Installer script for unix systems
 └── README.md           # Readme
 ```
 
@@ -208,6 +209,12 @@ ffmpeg is required for most of features to work. Install it and ensure it's in y
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=xdagiz/xytz&type=date&legend=top-left)](https://www.star-history.com/#xdagiz/xytz&type=date&legend=top-left)
+<a href="https://www.star-history.com/#xdagiz/xytz&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=xdagiz/xytz&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=xdagiz/xytz&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=xdagiz/xytz&type=date&legend=top-left" />
+ </picture>
+</a>
 
 By [xdagiz](https://github.com/xdagiz)

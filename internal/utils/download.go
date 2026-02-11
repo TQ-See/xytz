@@ -17,7 +17,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func StartDownload(dm *DownloadManager, program *tea.Program, url, formatID string, title string, options []types.DownloadOption) tea.Cmd {
+func StartDownload(dm *DownloadManager, program *tea.Program, url, formatID string, isAudioTab bool, abr float64, title string, options []types.DownloadOption) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
 		unfinished := UnfinishedDownload{
 			URL:       url,
@@ -37,7 +37,7 @@ func StartDownload(dm *DownloadManager, program *tea.Program, url, formatID stri
 		}
 
 		downloadPath := cfg.GetDownloadPath()
-		go doDownload(dm, program, url, formatID, downloadPath, cfg.YTDLPPath, options)
+		go doDownload(dm, program, url, formatID, isAudioTab, abr, downloadPath, cfg.YTDLPPath, cfg.CookiesBrowser, cfg.CookiesFile, options)
 
 		return nil
 	})
@@ -53,7 +53,7 @@ func CancelDownload(dm *DownloadManager) tea.Cmd {
 	})
 }
 
-func doDownload(dm *DownloadManager, program *tea.Program, url, formatID, outputPath, ytDlpPath string, options []types.DownloadOption) {
+func doDownload(dm *DownloadManager, program *tea.Program, url, formatID string, isAudioTab bool, abr float64, outputPath, ytDlpPath, cookiesBrowser, cookiesFile string, options []types.DownloadOption) {
 	ctx, cancel := context.WithCancel(context.Background())
 	dm.SetContext(ctx, cancel)
 
@@ -69,19 +69,56 @@ func doDownload(dm *DownloadManager, program *tea.Program, url, formatID, output
 
 	isPlaylist := strings.Contains(url, "/playlist?list=") || strings.Contains(url, "&list=")
 
-	args := []string{
-		"-f",
-		formatID,
-		"--newline",
-		"-R",
-		"infinite",
-		"-o",
-		filepath.Join(outputPath, "%(title)s.%(ext)s"),
-		url,
+	var (
+		args          []string
+		fileExtension string
+	)
+
+	if isAudioTab {
+		audioQuality := fmt.Sprintf("%dK", int(abr))
+		fileExtension = ".mp3"
+		args = []string{
+			"-f",
+			formatID,
+			"-o",
+			filepath.Join(outputPath, "%(artist)s - %(title)s.%(ext)s"),
+			"--restrict-filenames",
+			"--embed-thumbnail",
+			"-x",
+			"--audio-format",
+			"mp3",
+			"--audio-quality",
+			audioQuality,
+			"--add-metadata",
+			"--metadata-from-title",
+			"%(artist)s - %(title)s",
+			"--newline",
+			"-R",
+			"infinite",
+			url,
+		}
+	} else {
+		fileExtension = ".mp4"
+		args = []string{
+			"-f",
+			formatID,
+			"--newline",
+			"-R",
+			"infinite",
+			"-o",
+			filepath.Join(outputPath, "%(title)s.%(ext)s"),
+			url,
+		}
 	}
 
 	if !isPlaylist {
 		args = append([]string{"--no-playlist"}, args...)
+	}
+
+	if cookiesBrowser != "" {
+		args = append([]string{"--cookies-from-browser", cookiesBrowser}, args...)
+	} else if cookiesFile != "" {
+		args = append([]string{"--cookies", cookiesFile}, args...)
 	}
 
 	for _, opt := range options {
@@ -131,7 +168,7 @@ func doDownload(dm *DownloadManager, program *tea.Program, url, formatID, output
 		wg.Add(1)
 		defer wg.Done()
 		parser.ReadPipe(pipe, func(percent float64, speed, eta, status, destination string) {
-			program.Send(types.ProgressMsg{Percent: percent, Speed: speed, Eta: eta, Status: status, Destination: destination})
+			program.Send(types.ProgressMsg{Percent: percent, Speed: speed, Eta: eta, Status: status, Destination: destination, FileExtension: fileExtension})
 		})
 	}
 

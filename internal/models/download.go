@@ -26,6 +26,7 @@ type DownloadModel struct {
 	Cancelled       bool
 	Destination     string
 	FileDestination string
+	FileExtension   string
 	DownloadManager *utils.DownloadManager
 }
 
@@ -59,6 +60,9 @@ func (m DownloadModel) Update(msg tea.Msg) (DownloadModel, tea.Cmd) {
 		m.Phase = msg.Status
 		if msg.Destination != "" {
 			m.FileDestination = msg.Destination
+		}
+		if msg.FileExtension != "" {
+			m.FileExtension = msg.FileExtension
 		}
 
 	case types.PauseDownloadMsg:
@@ -146,7 +150,11 @@ func (m DownloadModel) View() string {
 
 	if m.Completed {
 		title := m.SelectedVideo.Title()
-		finalPath := filepath.Join(m.Destination, title+".mp4")
+		ext := ".mp4"
+		if m.FileExtension != "" {
+			ext = m.FileExtension
+		}
+		finalPath := filepath.Join(m.Destination, title+ext)
 		s.WriteString(styles.CompletionMessageStyle.Render("Video saved to " + finalPath))
 		s.WriteRune('\n')
 		s.WriteRune('\n')

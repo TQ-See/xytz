@@ -22,6 +22,8 @@ type Config struct {
 	EmbedChapters       bool   `yaml:"embed_chapters"`
 	FFmpegPath          string `yaml:"ffmpeg_path"`
 	YTDLPPath           string `yaml:"yt_dlp_path"`
+	CookiesBrowser      string `yaml:"cookies_browser"`
+	CookiesFile         string `yaml:"cookies_file"`
 }
 
 func GetConfigDir() string {

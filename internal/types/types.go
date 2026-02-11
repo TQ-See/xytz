@@ -30,6 +30,7 @@ type ProgressMsg struct {
 	Eta         string
 	Status      string
 	Destination string
+	FileExtension string
 }
 
 type VideoItem struct {
@@ -57,6 +58,7 @@ type FormatItem struct {
 	Language    string
 	Resolution  string
 	FormatType  string
+	ABR         float64
 }
 
 func (i FormatItem) Title() string       { return i.FormatTitle }
@@ -77,6 +79,8 @@ type FormatResultMsg struct {
 type StartDownloadMsg struct {
 	URL             string
 	FormatID        string
+	IsAudioTab      bool
+	ABR             float64
 	DownloadOptions []DownloadOption
 }
 

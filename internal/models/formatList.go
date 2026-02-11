@@ -141,7 +141,10 @@ func (m FormatListModel) HandleResize(w, h int) FormatListModel {
 }
 
 func (m FormatListModel) Update(msg tea.Msg) (FormatListModel, tea.Cmd) {
-	var cmd tea.Cmd
+	var (
+		cmd     tea.Cmd
+		listCmd tea.Cmd
+	)
 
 	handled, autocompleteCmd := m.Autocomplete.Update(msg)
 	if handled {
@@ -193,6 +196,8 @@ func (m FormatListModel) Update(msg tea.Msg) (FormatListModel, tea.Cmd) {
 						return types.StartDownloadMsg{
 							URL:             m.URL,
 							FormatID:        formatID,
+							IsAudioTab:      false,
+							ABR:             0,
 							DownloadOptions: m.DownloadOptions,
 						}
 					}
@@ -224,6 +229,8 @@ func (m FormatListModel) Update(msg tea.Msg) (FormatListModel, tea.Cmd) {
 				msg := types.StartDownloadMsg{
 					URL:             m.URL,
 					FormatID:        format.FormatValue,
+					IsAudioTab:      m.ActiveTab == FormatTabAudio,
+					ABR:             format.ABR,
 					DownloadOptions: m.DownloadOptions,
 				}
 				return msg
@@ -245,7 +252,6 @@ func (m FormatListModel) Update(msg tea.Msg) (FormatListModel, tea.Cmd) {
 		return m, tea.Batch(cmd, inputCmd)
 	}
 
-	var listCmd tea.Cmd
 	m.List, listCmd = m.List.Update(msg)
 	return m, tea.Batch(cmd, listCmd)
 }
