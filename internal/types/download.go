@@ -32,3 +32,18 @@ func DownloadOptions() []DownloadOption {
 		},
 	}
 }
+
+type DownloadRequest struct {
+	URL      string
+	FormatID string
+
+	IsAudioTab bool
+	ABR        float64
+
+	Title string
+
+	Options []DownloadOption
+
+	CookiesFromBrowser string
+	Cookies            string
+}

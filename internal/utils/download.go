@@ -17,11 +17,11 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func StartDownload(dm *DownloadManager, program *tea.Program, url, formatID string, isAudioTab bool, abr float64, title string, options []types.DownloadOption, cookiesFromBrowser, cookies string) tea.Cmd {
+func StartDownload(dm *DownloadManager, program *tea.Program, title string, req types.DownloadRequest) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
 		unfinished := UnfinishedDownload{
-			URL:       url,
-			FormatID:  formatID,
+			URL:       req.URL,
+			FormatID:  req.FormatID,
 			Title:     title,
 			Timestamp: time.Now(),
 		}
@@ -38,8 +38,8 @@ func StartDownload(dm *DownloadManager, program *tea.Program, url, formatID stri
 
 		downloadPath := cfg.GetDownloadPath()
 
-		cb := cookiesFromBrowser
-		c := cookies
+		cb := req.CookiesFromBrowser
+		c := req.Cookies
 		if cb == "" {
 			cb = cfg.CookiesBrowser
 		}
@@ -47,7 +47,7 @@ func StartDownload(dm *DownloadManager, program *tea.Program, url, formatID stri
 			c = cfg.CookiesFile
 		}
 
-		go doDownload(dm, program, url, formatID, isAudioTab, abr, downloadPath, cfg.YTDLPPath, cb, c, options)
+		go doDownload(dm, program, req.URL, req.FormatID, req.IsAudioTab, req.ABR, downloadPath, cfg.YTDLPPath, cb, c, req.Options)
 
 		return nil
 	})
