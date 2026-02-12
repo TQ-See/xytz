@@ -21,11 +21,13 @@ import (
 )
 
 type CLIOptions struct {
-	SearchLimit int
-	SortBy      string
-	Query       string
-	Channel     string
-	Playlist    string
+	SearchLimit        int
+	SortBy             string
+	Query              string
+	Channel            string
+	Playlist           string
+	CookiesFromBrowser string
+	Cookies            string
 }
 
 type SearchModel struct {
@@ -43,6 +45,8 @@ type SearchModel struct {
 	DownloadOptions []types.DownloadOption
 	Options         *CLIOptions
 	HasFFmpeg       bool
+	CookiesFromBrowser string
+	Cookies         string
 }
 
 func NewSearchModel() SearchModel {
@@ -67,13 +71,19 @@ func NewSearchModelWithOptions(opts *CLIOptions) SearchModel {
 
 	var defaultSort types.SortBy
 	var searchLimit int
+	var cookiesFromBrowser string
+	var cookies string
 
 	if opts != nil {
 		defaultSort = types.ParseSortBy(opts.SortBy)
 		searchLimit = opts.SearchLimit
+		cookiesFromBrowser = opts.CookiesFromBrowser
+		cookies = opts.Cookies
 	} else {
 		defaultSort = types.ParseSortBy(cfg.SortByDefault)
 		searchLimit = cfg.SearchLimit
+		cookiesFromBrowser = cfg.CookiesBrowser
+		cookies = cfg.CookiesFile
 	}
 
 	hasFFmpeg := utils.HasFFmpeg(cfg.FFmpegPath)
@@ -103,6 +113,8 @@ func NewSearchModelWithOptions(opts *CLIOptions) SearchModel {
 		DownloadOptions: options,
 		Options:         opts,
 		HasFFmpeg:       hasFFmpeg,
+		CookiesFromBrowser: cookiesFromBrowser,
+		Cookies:         cookies,
 	}
 }
 

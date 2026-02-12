@@ -39,6 +39,7 @@ func executeYTDLP(sm *SearchManager, searchURL string, searchLimit int) any {
 	}
 
 	playlistItems := fmt.Sprintf("1:%d", searchLimit)
+
 	var args []string
 	if cfg.CookiesBrowser != "" {
 		args = append(args, "--cookies-from-browser", cfg.CookiesBrowser)

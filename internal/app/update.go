@@ -82,7 +82,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.Download.SelectedVideo = m.SelectedVideo
 		}
 		m.LoadingType = "download"
-		cmd = utils.StartDownload(m.DownloadManager, m.Program, msg.URL, msg.FormatID, msg.IsAudioTab, msg.ABR, m.SelectedVideo.Title(), m.Search.DownloadOptions)
+		cmd = utils.StartDownload(m.DownloadManager, m.Program, msg.URL, msg.FormatID, msg.IsAudioTab, msg.ABR, m.SelectedVideo.Title(), m.Search.DownloadOptions, m.Search.CookiesFromBrowser, m.Search.Cookies)
 		return m, cmd
 	case types.StartResumeDownloadMsg:
 		m.State = types.StateDownload
@@ -90,7 +90,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Download.Cancelled = false
 		m.Download.SelectedVideo = types.VideoItem{VideoTitle: msg.Title}
 		m.LoadingType = "download"
-		cmd = utils.StartDownload(m.DownloadManager, m.Program, msg.URL, msg.FormatID, false, 0, msg.Title, m.Search.DownloadOptions)
+		cmd = utils.StartDownload(m.DownloadManager, m.Program, msg.URL, msg.FormatID, false, 0, msg.Title, m.Search.DownloadOptions, m.Search.CookiesFromBrowser, m.Search.Cookies)
 		return m, cmd
 
 	case types.DownloadResultMsg:

@@ -16,11 +16,13 @@ import (
 )
 
 var (
-	searchLimit int
-	sortBy      string
-	query       string
-	channel     string
-	playlist    string
+	searchLimit        int
+	sortBy             string
+	query              string
+	channel            string
+	playlist           string
+	cookiesFromBrowser string
+	cookies            string
 
 	rootCmd = &cobra.Command{
 		Use:   "xytz",
@@ -46,11 +48,13 @@ browse, and download videos directly from your terminal.`,
 
 func startApp() {
 	opts := &models.CLIOptions{
-		SearchLimit: searchLimit,
-		SortBy:      sortBy,
-		Query:       query,
-		Channel:     channel,
-		Playlist:    playlist,
+		SearchLimit:        searchLimit,
+		SortBy:             sortBy,
+		Query:              query,
+		Channel:            channel,
+		Playlist:           playlist,
+		CookiesFromBrowser: cookiesFromBrowser,
+		Cookies:            cookies,
 	}
 
 	zone.NewGlobal()
@@ -83,6 +87,33 @@ func startApp() {
 	saveConfigOptions(m)
 }
 
+func Execute() {
+	if err := rootCmd.Execute(); err != nil {
+		os.Exit(1)
+	}
+}
+
+func init() {
+	cfg, err := config.Load()
+	if err != nil {
+		log.Printf("Warning: Could not load config, using defaults: %v", err)
+		cfg = config.GetDefault()
+	}
+
+	rootCmd.Flags().IntVarP(&searchLimit, "number", "n", cfg.SearchLimit, "Number of search results")
+
+	rootCmd.Flags().StringVarP(&sortBy, "sort-by", "s", cfg.SortByDefault, "Default sort option (relevance, date, views, rating)")
+
+	rootCmd.Flags().BoolP("help", "h", false, "Help for xytz")
+
+	rootCmd.Flags().StringVarP(&query, "query", "q", "", "Direct search with a query")
+	rootCmd.Flags().StringVarP(&channel, "channel", "c", "", "Direct channel search")
+	rootCmd.Flags().StringVarP(&playlist, "playlist", "p", "", "Direct playlist search")
+
+	rootCmd.Flags().StringVarP(&cookiesFromBrowser, "cookies-from-browser", "", cfg.CookiesBrowser, "The name of the browser to load cookies from")
+	rootCmd.Flags().StringVarP(&cookies, "cookies", "", cfg.CookiesFile, "Netscape formatted file to read cookies from")
+}
+
 func saveConfigOptions(m *app.Model) {
 	cfg, err := config.Load()
 	if err != nil {
@@ -106,28 +137,4 @@ func saveConfigOptions(m *app.Model) {
 	if err := cfg.Save(); err != nil {
 		log.Printf("Failed to save config on exit: %v", err)
 	}
-}
-
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		os.Exit(1)
-	}
-}
-
-func init() {
-	cfg, err := config.Load()
-	if err != nil {
-		log.Printf("Warning: Could not load config, using defaults: %v", err)
-		cfg = config.GetDefault()
-	}
-
-	rootCmd.Flags().IntVarP(&searchLimit, "number", "n", cfg.SearchLimit, "Number of search results")
-
-	rootCmd.Flags().StringVarP(&sortBy, "sort-by", "s", cfg.SortByDefault, "Default sort option (relevance, date, views, rating)")
-
-	rootCmd.Flags().BoolP("help", "h", false, "help for xytz")
-
-	rootCmd.Flags().StringVarP(&query, "query", "q", "", "Direct search with a query")
-	rootCmd.Flags().StringVarP(&channel, "channel", "c", "", "Direct channel search")
-	rootCmd.Flags().StringVarP(&playlist, "playlist", "p", "", "Direct playlist search")
 }
