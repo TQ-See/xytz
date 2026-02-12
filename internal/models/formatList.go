@@ -33,12 +33,15 @@ type FormatListModel struct {
 	Autocomplete     FormatAutocompleteModel
 	URL              string
 	SelectedVideo    types.VideoItem
+	IsQueue          bool
+	QueueVideos      []types.VideoItem
 	DownloadOptions  []types.DownloadOption
 	ActiveTab        FormatTab
 	VideoFormats     []list.Item
 	AudioFormats     []list.Item
 	ThumbnailFormats []list.Item
 	AllFormats       []list.Item
+	ShowVideoInfo    bool
 }
 
 func NewFormatListModel() FormatListModel {
@@ -74,7 +77,30 @@ func (m FormatListModel) Init() tea.Cmd {
 func (m FormatListModel) View() string {
 	var s strings.Builder
 
-	if m.SelectedVideo.ID != "" {
+	if m.IsQueue && len(m.QueueVideos) > 0 {
+		s.WriteString(styles.SectionHeaderStyle.Render(fmt.Sprintf("Download %d videos", len(m.QueueVideos))))
+		s.WriteRune('\n')
+
+		maxDisplay := 10
+		display := m.QueueVideos
+		if len(display) > maxDisplay {
+			display = display[:maxDisplay]
+		}
+
+		for i, v := range display {
+			title := v.Title()
+			if len(title) > 60 {
+				title = title[:57] + "..."
+			}
+
+			fmt.Fprintf(&s, "%d. %s\n", i+1, title)
+		}
+
+		if len(m.QueueVideos) > maxDisplay {
+			remaining := len(m.QueueVideos) - maxDisplay
+			s.WriteString(styles.MutedStyle.Render(fmt.Sprintf("...and %d more\n", remaining)))
+		}
+	} else if m.ShowVideoInfo && m.SelectedVideo.ID != "" {
 		s.WriteString(styles.SectionHeaderStyle.Render(m.SelectedVideo.Title()))
 		s.WriteRune('\n')
 		s.WriteString(styles.MutedStyle.Render(fmt.Sprintf("⏱  %s", utils.FormatDuration(m.SelectedVideo.Duration))))
@@ -134,7 +160,20 @@ func (m FormatListModel) renderTabs() string {
 func (m FormatListModel) HandleResize(w, h int) FormatListModel {
 	m.Width = w
 	m.Height = h
-	m.List.SetSize(w, h-14)
+
+	baseReserved := 16
+	if m.IsQueue && len(m.QueueVideos) > 0 {
+		display := min(len(m.QueueVideos), 10)
+		queueLines := 3 + display
+		if len(m.QueueVideos) > 10 {
+			queueLines++
+		}
+
+		baseReserved += queueLines
+	}
+
+	listHeight := max(h-baseReserved, 5)
+	m.List.SetSize(w, listHeight)
 	m.CustomInput.Width = w - 12
 	m.Autocomplete.HandleResize(w, h)
 	return m
@@ -193,6 +232,16 @@ func (m FormatListModel) Update(msg tea.Msg) (FormatListModel, tea.Cmd) {
 				formatID := strings.TrimSpace(m.CustomInput.Value())
 				if formatID != "" {
 					cmd = func() tea.Msg {
+						if m.IsQueue && len(m.QueueVideos) > 0 {
+							return types.StartQueueDownloadMsg{
+								FormatID:        formatID,
+								IsAudioTab:      false,
+								ABR:             0,
+								DownloadOptions: m.DownloadOptions,
+								Videos:          m.QueueVideos,
+							}
+						}
+
 						return types.StartDownloadMsg{
 							URL:             m.URL,
 							FormatID:        formatID,
@@ -225,13 +274,25 @@ func (m FormatListModel) Update(msg tea.Msg) (FormatListModel, tea.Cmd) {
 				return m, nil
 			}
 
-			cmd = func() tea.Msg {
-				return types.StartDownloadMsg{
-					URL:             m.URL,
-					FormatID:        format.FormatValue,
-					IsAudioTab:      m.ActiveTab == FormatTabAudio,
-					ABR:             format.ABR,
-					DownloadOptions: m.DownloadOptions,
+			if m.IsQueue && len(m.QueueVideos) > 0 {
+				cmd = func() tea.Msg {
+					return types.StartQueueDownloadMsg{
+						FormatID:        format.FormatValue,
+						IsAudioTab:      m.ActiveTab == FormatTabAudio,
+						ABR:             format.ABR,
+						DownloadOptions: m.DownloadOptions,
+						Videos:          m.QueueVideos,
+					}
+				}
+			} else {
+				cmd = func() tea.Msg {
+					return types.StartDownloadMsg{
+						URL:             m.URL,
+						FormatID:        format.FormatValue,
+						IsAudioTab:      m.ActiveTab == FormatTabAudio,
+						ABR:             format.ABR,
+						DownloadOptions: m.DownloadOptions,
+					}
 				}
 			}
 		}

@@ -6,9 +6,11 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/xdagiz/xytz/internal/paths"
+	"github.com/xdagiz/xytz/internal/types"
 )
 
 var ErrInvalidUnfinishedDownload = errors.New("unfinished download must have valid URL and title")
@@ -16,10 +18,13 @@ var ErrInvalidUnfinishedDownload = errors.New("unfinished download must have val
 const UnfinishedFileName = ".xytz_unfinished.json"
 
 type UnfinishedDownload struct {
-	URL       string    `json:"url"`
-	FormatID  string    `json:"format_id"`
-	Title     string    `json:"title"`
-	Timestamp time.Time `json:"timestamp"`
+	URL       string            `json:"url"`
+	FormatID  string            `json:"format_id"`
+	Title     string            `json:"title"`
+	Desc      string            `json:"desc,omitempty"`
+	URLs      []string          `json:"urls,omitempty"`
+	Videos    []types.VideoItem `json:"videos,omitempty"`
+	Timestamp time.Time         `json:"timestamp"`
 }
 
 var GetUnfinishedFilePath = func() string {
@@ -56,6 +61,10 @@ func LoadUnfinished() ([]UnfinishedDownload, error) {
 }
 
 func SaveUnfinished(downloads []UnfinishedDownload) error {
+	if downloads == nil {
+		downloads = []UnfinishedDownload{}
+	}
+
 	path := GetUnfinishedFilePath()
 	data, err := json.MarshalIndent(downloads, "", "  ")
 	if err != nil {
@@ -115,4 +124,63 @@ func GetUnfinishedByURL(url string) *UnfinishedDownload {
 	}
 
 	return nil
+}
+
+func AddUnfinishedBatch(downloads []UnfinishedDownload) error {
+	if len(downloads) == 0 {
+		return nil
+	}
+
+	existing, err := LoadUnfinished()
+	if err != nil {
+		return err
+	}
+
+	existingMap := make(map[string]int)
+	for i, d := range existing {
+		existingMap[d.URL] = i
+	}
+
+	for _, d := range downloads {
+		if d.URL == "" || d.Title == "" {
+			continue
+		}
+
+		if idx, exists := existingMap[d.URL]; exists {
+			existing[idx] = d
+		} else {
+			existing = append(existing, d)
+		}
+	}
+
+	return SaveUnfinished(existing)
+}
+
+func RemoveUnfinishedBatch(urls []string) error {
+	if len(urls) == 0 {
+		return nil
+	}
+
+	downloads, err := LoadUnfinished()
+	if err != nil {
+		return err
+	}
+
+	urlSet := make(map[string]bool)
+	for _, url := range urls {
+		urlSet[url] = true
+	}
+
+	var newDownloads []UnfinishedDownload
+	for _, d := range downloads {
+		if !urlSet[d.URL] {
+			newDownloads = append(newDownloads, d)
+		}
+	}
+
+	return SaveUnfinished(newDownloads)
+}
+
+func QueueUnfinishedKey(query string) string {
+	return "queue:" + strings.TrimSpace(query)
 }

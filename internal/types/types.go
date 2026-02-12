@@ -1,6 +1,9 @@
 package types
 
-import "github.com/charmbracelet/bubbles/list"
+import (
+	"github.com/charmbracelet/bubbles/list"
+	"github.com/xdagiz/xytz/internal/styles"
+)
 
 const GithubRepoLink = "https://github.com/xdagiz/xytz"
 
@@ -32,6 +35,9 @@ type ProgressMsg struct {
 	Status        string
 	Destination   string
 	FileExtension string
+	QueueIndex    int
+	QueueTotal    int
+	Title         string
 }
 
 type VideoItem struct {
@@ -46,6 +52,29 @@ type VideoItem struct {
 func (i VideoItem) Title() string       { return i.VideoTitle }
 func (i VideoItem) Description() string { return i.Desc }
 func (i VideoItem) FilterValue() string { return i.VideoTitle }
+
+type SelectableVideoItem struct {
+	VideoItem
+	IsSelected bool
+}
+
+func (i SelectableVideoItem) Title() string {
+	if i.IsSelected {
+		return styles.QueueSelectedItemStyle.Render("✓ " + i.VideoTitle)
+	}
+
+	return i.VideoTitle
+}
+
+func (i SelectableVideoItem) Description() string {
+	if i.IsSelected {
+		return styles.QueueSelectedItemStyle.Bold(false).Render(i.Desc)
+	}
+
+	return i.Desc
+}
+
+func (i SelectableVideoItem) FilterValue() string { return i.VideoTitle }
 
 type SearchResultMsg struct {
 	Videos []list.Item
@@ -89,8 +118,11 @@ type StartDownloadMsg struct {
 }
 
 type DownloadResultMsg struct {
-	Output string
-	Err    string
+	Output      string
+	Err         string
+	Destination string
+	QueueIndex  int
+	QueueTotal  int
 }
 
 type DownloadCompleteMsg struct{}
@@ -107,6 +139,8 @@ type CancelFormatsMsg struct{}
 
 type StartResumeDownloadMsg struct {
 	URL      string
+	URLs     []string
+	Videos   []VideoItem
 	FormatID string
 	Title    string
 }

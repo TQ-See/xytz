@@ -23,6 +23,8 @@ type StatusKeys struct {
 	Next            key.Binding
 	Prev            key.Binding
 	DownloadDefault key.Binding
+	SelectVideos    key.Binding
+	SelectAll       key.Binding
 }
 
 func GetStatusKeys(state types.State, helpVisible bool, resumeVisible bool) StatusKeys {
@@ -54,6 +56,14 @@ func GetStatusKeys(state types.State, helpVisible bool, resumeVisible bool) Stat
 		keys.DownloadDefault = key.NewBinding(
 			key.WithKeys("d"),
 			key.WithHelp("d", "download with default quality"),
+		)
+		keys.SelectVideos = key.NewBinding(
+			key.WithKeys(" "),
+			key.WithHelp("Space", "select"),
+		)
+		keys.SelectAll = key.NewBinding(
+			key.WithKeys("a"),
+			key.WithHelp("a", "select all"),
 		)
 
 	case types.StateFormatList:
@@ -130,6 +140,8 @@ func FormatKeysForStatusBar(keys StatusKeys) string {
 	addKey(keys.Next)
 	addKey(keys.Prev)
 	addKey(keys.DownloadDefault)
+	addKey(keys.SelectVideos)
+	addKey(keys.SelectAll)
 
 	return strings.Join(parts, " • ")
 }
