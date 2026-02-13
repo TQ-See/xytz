@@ -164,7 +164,7 @@ func PerformSearch(sm *SearchManager, query, sortParam string, searchLimit int, 
 		isURL := videoID != ""
 
 		if isURL {
-			url := "https://www.youtube.com/watch?v=" + videoID
+			url := BuildVideoURL(videoID)
 			return types.StartFormatMsg{URL: url}
 		} else {
 			encodedQuery := url.QueryEscape(query)

@@ -68,6 +68,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.State = types.StateVideoList
 		m.ErrMsg = msg.Err
 		return m, nil
+
 	case types.FormatResultMsg:
 		m.LoadingType = ""
 		m.FormatList.SetFormats(msg.VideoFormats, msg.AudioFormats, msg.ThumbnailFormats, msg.AllFormats)
@@ -95,12 +96,14 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			FormatID:           msg.FormatID,
 			IsAudioTab:         msg.IsAudioTab,
 			ABR:                msg.ABR,
+			Title:              msg.SelectedVideo.Title(),
 			Options:            m.Search.DownloadOptions,
 			CookiesFromBrowser: m.Search.CookiesFromBrowser,
 			Cookies:            m.Search.Cookies,
 		}
-		cmd = utils.StartDownload(m.DownloadManager, m.Program, m.SelectedVideo.Title(), req)
+		cmd = utils.StartDownload(m.DownloadManager, m.Program, req)
 		return m, cmd
+
 	case types.StartResumeDownloadMsg:
 		m.State = types.StateDownload
 		m.Download.Completed = false
@@ -116,7 +119,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			CookiesFromBrowser: m.Search.CookiesFromBrowser,
 			Cookies:            m.Search.Cookies,
 		}
-		cmd = utils.StartDownload(m.DownloadManager, m.Program, msg.Title, req)
+		cmd = utils.StartDownload(m.DownloadManager, m.Program, req)
 		return m, cmd
 
 	case types.DownloadResultMsg:
@@ -232,12 +235,13 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if HandleListEsc(m.VideoList.List) {
 					m.State = types.StateSearchInput
 					m.ErrMsg = ""
-					m.Search.Input.SetValue("")
 					m.VideoList.List.ResetFilter()
 					m.VideoList.List.ResetSelected()
+					m.VideoList.List.SetFilterText("")
 					m.VideoList.PlaylistURL = ""
 					return m, nil
 				}
+
 				m.VideoList.List.SetFilterState(list.Unfiltered)
 				return m, nil
 			}
@@ -259,6 +263,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						m.FormatList.List.ResetSelected()
 						return m, nil
 					}
+
 					m.FormatList.List.SetFilterState(list.Unfiltered)
 					return m, nil
 				}
@@ -272,6 +277,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.State = types.StateFormatList
 					m.FormatList.List.ResetSelected()
 				}
+
 				m.ErrMsg = ""
 				return m, nil
 			}

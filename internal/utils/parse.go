@@ -99,6 +99,11 @@ func BuildPlaylistURL(input string) string {
 	return "https://www.youtube.com/playlist?list=" + playlistID
 }
 
+func BuildVideoURL(videoID string) string {
+	url := "https://www.youtube.com/watch?v=" + videoID
+	return url
+}
+
 func BuildChannelURL(input string) string {
 	input = strings.TrimSpace(input)
 

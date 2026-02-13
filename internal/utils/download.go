@@ -17,12 +17,12 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func StartDownload(dm *DownloadManager, program *tea.Program, title string, req types.DownloadRequest) tea.Cmd {
+func StartDownload(dm *DownloadManager, program *tea.Program, req types.DownloadRequest) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
 		unfinished := UnfinishedDownload{
 			URL:       req.URL,
 			FormatID:  req.FormatID,
-			Title:     title,
+			Title:     req.Title,
 			Timestamp: time.Now(),
 		}
 

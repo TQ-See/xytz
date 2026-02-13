@@ -1,6 +1,7 @@
 package config
 
 import (
+	"slices"
 	"testing"
 )
 
@@ -14,36 +15,32 @@ func TestGetPresetByName(t *testing.T) {
 			name:  "best preset",
 			input: "best",
 			expected: &QualityPreset{
-				Name:        "best",
-				Description: "Best available quality",
-				Format:      "bv*+ba/b",
+				Name:   "best",
+				Format: "bv*+ba/b",
 			},
 		},
 		{
 			name:  "4k preset",
 			input: "4k",
 			expected: &QualityPreset{
-				Name:        "4k",
-				Description: "4k (3840x2160)",
-				Format:      "bestvideo[height<=2160]+bestaudio/best[height<=2160]",
+				Name:   "4k",
+				Format: "bv[height<=2160]+ba/b[height<=2160]",
 			},
 		},
 		{
 			name:  "1080p preset",
 			input: "1080p",
 			expected: &QualityPreset{
-				Name:        "1080p",
-				Description: "Full HD (1920x1080)",
-				Format:      "bestvideo[height<=1080]+bestaudio/best[height<=1080]",
+				Name:   "1080p",
+				Format: "bv[height<=1080]+ba/b[height<=1080]",
 			},
 		},
 		{
 			name:  "720p preset",
 			input: "720p",
 			expected: &QualityPreset{
-				Name:        "720p",
-				Description: "HD (1280x720)",
-				Format:      "bestvideo[height<=720]+bestaudio/best[height<=720]",
+				Name:   "720p",
+				Format: "bv[height<=720]+ba/b[height<=720]",
 			},
 		},
 		{
@@ -133,7 +130,7 @@ func TestResolveQuality(t *testing.T) {
 		{
 			name:     "preset returns format",
 			quality:  "1080p",
-			expected: "bestvideo[height<=1080]+bestaudio/best[height<=1080]",
+			expected: "bv[height<=1080]+ba/b[height<=1080]",
 		},
 		{
 			name:     "unknown returns as-is",
@@ -170,13 +167,7 @@ func TestPresetNames(t *testing.T) {
 	}
 
 	for _, expected := range expectedPresets {
-		found := false
-		for _, name := range names {
-			if name == expected {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(names, expected)
 
 		if !found {
 			t.Errorf("Expected preset %q not found in PresetNames()", expected)

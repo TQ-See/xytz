@@ -226,14 +226,13 @@ func (m FormatListModel) Update(msg tea.Msg) (FormatListModel, tea.Cmd) {
 			}
 
 			cmd = func() tea.Msg {
-				msg := types.StartDownloadMsg{
+				return types.StartDownloadMsg{
 					URL:             m.URL,
 					FormatID:        format.FormatValue,
 					IsAudioTab:      m.ActiveTab == FormatTabAudio,
 					ABR:             format.ABR,
 					DownloadOptions: m.DownloadOptions,
 				}
-				return msg
 			}
 		}
 	}

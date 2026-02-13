@@ -192,7 +192,6 @@ func TestExpandPath(t *testing.T) {
 }
 
 func TestGetDownloadPath(t *testing.T) {
-	// This test will use actual home dir, so just verify it doesn't panic
 	cfg := &Config{
 		DefaultDownloadPath: "~/Videos",
 	}

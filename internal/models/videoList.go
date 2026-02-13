@@ -26,6 +26,7 @@ type VideoListModel struct {
 	PlaylistName     string
 	PlaylistURL      string
 	ErrMsg           string
+	DownloadOptions  []types.DownloadOption
 }
 
 func NewVideoListModel() VideoListModel {
@@ -104,43 +105,39 @@ func (m VideoListModel) Update(msg tea.Msg) (VideoListModel, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "d":
-			if m.ErrMsg != "" || len(m.List.Items()) == 0 {
-				return m, nil
-			}
+			if !m.List.SettingFilter() {
+				if m.ErrMsg != "" || len(m.List.Items()) == 0 {
+					return m, nil
+				}
 
-			if video, ok := m.List.SelectedItem().(types.VideoItem); ok {
-				var url string
-				if m.IsPlaylistSearch && m.PlaylistURL != "" {
-					playlistID := utils.ExtractPlaylistID(m.PlaylistURL)
-					if playlistID != "" {
-						url = fmt.Sprintf("https://www.youtube.com/watch?v=%s&list=%s", video.ID, playlistID)
+				if video, ok := m.List.SelectedItem().(types.VideoItem); ok {
+					var url string
+					if m.IsPlaylistSearch && m.PlaylistURL != "" {
+						url = utils.BuildPlaylistURL(m.PlaylistURL)
 					} else {
-						url = "https://www.youtube.com/watch?v=" + video.ID
+						url = utils.BuildVideoURL(video.ID)
 					}
-				} else {
-					url = "https://www.youtube.com/watch?v=" + video.ID
-				}
 
-				cfg, err := config.Load()
-				if err != nil {
-					log.Printf("Warning: Failed to load config: %v", err)
-					cfg = config.GetDefault()
-				}
+					cfg, err := config.Load()
+					if err != nil {
+						log.Printf("Warning: Failed to load config: %v", err)
+					}
+					formatID := cfg.GetDefaultFormat()
 
-				formatID := cfg.GetDefaultFormat()
-
-				cmd = func() tea.Msg {
-					return types.StartDownloadMsg{
-						URL:           url,
-						FormatID:      formatID,
-						SelectedVideo: video,
+					cmd = func() tea.Msg {
+						return types.StartDownloadMsg{
+							URL:             url,
+							FormatID:        formatID,
+							SelectedVideo:   video,
+							DownloadOptions: m.DownloadOptions,
+						}
 					}
 				}
 			}
 		}
 		switch msg.Type {
 		case tea.KeyEnter:
-			if m.List.FilterState() == list.Filtering {
+			if m.List.SettingFilter() {
 				m.List.SetFilterState(list.FilterApplied)
 				return m, nil
 			}
@@ -153,16 +150,11 @@ func (m VideoListModel) Update(msg tea.Msg) (VideoListModel, tea.Cmd) {
 			} else if video, ok := m.List.SelectedItem().(types.VideoItem); ok {
 				var url string
 				if m.IsPlaylistSearch && m.PlaylistURL != "" {
-					playlistID := utils.ExtractPlaylistID(m.PlaylistURL)
-
-					if playlistID != "" {
-						url = fmt.Sprintf("https://www.youtube.com/watch?v=%s&list=%s", video.ID, playlistID)
-					} else {
-						url = "https://www.youtube.com/watch?v=" + video.ID
-					}
+					url = utils.BuildPlaylistURL(m.PlaylistURL)
 				} else {
-					url = "https://www.youtube.com/watch?v=" + video.ID
+					url = utils.BuildVideoURL(video.ID)
 				}
+
 				cmd = func() tea.Msg {
 					return types.StartFormatMsg{URL: url, SelectedVideo: video}
 				}

@@ -43,6 +43,10 @@ func LoadUnfinished() ([]UnfinishedDownload, error) {
 		return nil, err
 	}
 
+	if len(data) == 0 {
+		return []UnfinishedDownload{}, nil
+	}
+
 	var downloads []UnfinishedDownload
 	if err := json.Unmarshal(data, &downloads); err != nil {
 		return nil, err
