@@ -38,13 +38,16 @@ snapshot:
 release:
   header: |
     ## Installation
-    
+
     ```bash
     # Binary download
     curl -sSL https://xdagiz.dev/xytz/install.sh | bash
 
     # Or via Go
     go install github.com/xdagiz/xytz@latest
+
+    # Arch Linux (AUR)
+    yay -S xytz-bin
     ```
 
 changelog:

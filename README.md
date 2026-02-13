@@ -54,7 +54,15 @@ If you have Go installed, you can install directly:
 go install github.com/xdagiz/xytz@latest
 ```
 
-### 3. Build from Source
+### 3. From AUR (Arch Linux)
+
+If you're using an Arch-based distribution, you can install xytz from the AUR:
+
+```bash
+yay -S xytz-bin
+```
+
+### 4. Build from Source
 
 **Requirements:**
 
@@ -149,13 +157,33 @@ The configuration file is created automatically on first run with sensible defau
 
 ## Contributing
 
-Contributions are welcome! Please follow these steps:
+Contributions are welcome. Please ensure your fork is synced with the upstream repository before submitting pull requests.
 
-1. **Fork** the repository
-2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
-3. **Commit** your changes: `git commit -m 'Add amazing feature'`
-4. **Push** to the branch: `git push origin feature/amazing-feature`
-5. **Open** a Pull Request
+### Commit Style
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/) for commit messages:
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+[optional footer]
+```
+
+**Types:**
+
+- `feat` - New feature
+- `fix` - Bug fix
+- `docs` - Documentation
+- `refactor` - Code refactoring
+- `chore` - Maintenance tasks
+
+### Pull Request Guidelines
+
+- Keep changes focused and minimal
+- Ensure all tests pass before submitting
+- Update documentation if needed
+- Follow the existing code style
 
 ## Troubleshooting
 
