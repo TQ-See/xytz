@@ -5,6 +5,7 @@ import (
 	"github.com/xdagiz/xytz/internal/styles"
 	"github.com/xdagiz/xytz/internal/types"
 	"github.com/xdagiz/xytz/internal/utils"
+	"github.com/xdagiz/xytz/internal/version"
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
@@ -29,6 +30,7 @@ type Model struct {
 	SearchManager   *utils.SearchManager
 	FormatsManager  *utils.FormatsManager
 	DownloadManager *utils.DownloadManager
+	latestVersion   string
 }
 
 func (m *Model) Init() tea.Cmd {
@@ -71,7 +73,7 @@ func (m *Model) Init() tea.Cmd {
 		}
 	}
 
-	return tea.Batch(m.Search.Init(), m.Spinner.Tick, m.Download.Init(), cmd)
+	return tea.Batch(m.Search.Init(), m.Spinner.Tick, m.Download.Init(), m.fetchLatestVersion(), cmd)
 }
 
 func (m *Model) InitDownloadManager() {
@@ -111,5 +113,17 @@ func NewModelWithOptions(opts *models.CLIOptions) *Model {
 		SearchManager:   utils.NewSearchManager(),
 		FormatsManager:  utils.NewFormatsManager(),
 		DownloadManager: utils.NewDownloadManager(),
+	}
+}
+
+type latestVersionMsg struct {
+	version string
+	err     error
+}
+
+func (m *Model) fetchLatestVersion() tea.Cmd {
+	return func() tea.Msg {
+		version, err := version.FetchLatestVersion()
+		return latestVersionMsg{version: version, err: err}
 	}
 }

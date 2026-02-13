@@ -29,6 +29,12 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Spinner, spinnerCmd = m.Spinner.Update(msg)
 		return m, spinnerCmd
 
+	case latestVersionMsg:
+		if msg.err == nil {
+			m.latestVersion = msg.version
+			m.Search.LatestVersion = msg.version
+		}
+
 	case types.StartSearchMsg:
 		m.State = types.StateLoading
 		m.LoadingType = "search"

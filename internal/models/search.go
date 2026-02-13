@@ -43,6 +43,7 @@ type SearchModel struct {
 	HasFFmpeg          bool
 	CookiesFromBrowser string
 	Cookies            string
+	LatestVersion      string
 }
 
 func NewSearchModel() SearchModel {
@@ -112,6 +113,13 @@ func (m SearchModel) Init() tea.Cmd {
 
 func (m SearchModel) View() string {
 	var s strings.Builder
+	currentVersion := version.GetVersion()
+	versionDisplay := currentVersion
+
+	if m.LatestVersion != "" && currentVersion != "dev" && currentVersion != m.LatestVersion {
+		versionDisplay += " ✦ Update available!"
+	}
+
 	s.WriteString(lipgloss.JoinHorizontal(lipgloss.Center, styles.ASCIIStyle.Render(`
  ████████████
 ██████  ██████
@@ -119,7 +127,7 @@ func (m SearchModel) View() string {
 		lipgloss.NewStyle().PaddingLeft(4).Render(lipgloss.JoinVertical(
 			lipgloss.Left,
 			lipgloss.NewStyle().Foreground(styles.SecondaryColor).Bold(true).Render("xytz *Youtube from your terminal*"),
-			lipgloss.NewStyle().Foreground(styles.MutedColor).Render(version.GetVersion()),
+			lipgloss.NewStyle().Foreground(styles.MutedColor).Render(versionDisplay),
 			zone.Mark("open_github", lipgloss.NewStyle().Foreground(styles.MauveColor).Underline(true).Render("https://github.com/xdagiz/xytz")),
 		))))
 	s.WriteRune('\n')
