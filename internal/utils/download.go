@@ -47,27 +47,20 @@ func StartDownload(dm *DownloadManager, program *tea.Program, req types.Download
 			c = cfg.CookiesFile
 		}
 
-		go doDownload(dm, program, req, downloadPath, cfg.YTDLPPath, cb, c)
+		go doDownload(dm, program, req, downloadPath, cfg.YTDLPPath, cfg.FFmpegPath, cb, c)
 		return nil
 	})
 }
 
-func CancelDownload(dm *DownloadManager) tea.Cmd {
-	return tea.Cmd(func() tea.Msg {
-		if err := dm.Cancel(); err != nil {
-			log.Printf("Failed to cancel download: %v", err)
-		}
-
-		return types.CancelDownloadMsg{}
-	})
-}
-
-func doDownload(dm *DownloadManager, program *tea.Program, req types.DownloadRequest, outputPath, ytDlpPath, cookiesBrowser, cookiesFile string) {
+func doDownload(dm *DownloadManager, program *tea.Program, req types.DownloadRequest, outputPath, ytDlpPath, ffmpegPath, cookiesBrowser, cookiesFile string) {
 	ctx, cancel := context.WithCancel(context.Background())
 	dm.SetContext(ctx, cancel)
 
 	if ytDlpPath == "" {
 		ytDlpPath = "yt-dlp"
+	}
+	if ffmpegPath == "" {
+		ffmpegPath = "ffmpeg"
 	}
 
 	url := req.URL
@@ -87,40 +80,43 @@ func doDownload(dm *DownloadManager, program *tea.Program, req types.DownloadReq
 		fileExtension string
 	)
 
+	args = []string{
+		"-f",
+		formatID,
+		"--newline",
+		"-R",
+		"infinite",
+		url,
+	}
+
 	if req.IsAudioTab {
 		audioQuality := fmt.Sprintf("%dK", int(abr))
 		fileExtension = ".mp3"
-		args = []string{
-			"-f",
-			formatID,
+		ext := strings.Replace(fileExtension, ".", "", -1)
+		args = append([]string{
 			"-o",
 			filepath.Join(outputPath, "%(artist)s - %(title)s.%(ext)s"),
 			"--restrict-filenames",
 			"-x",
 			"--audio-format",
-			"mp3",
+			ext,
 			"--audio-quality",
 			audioQuality,
 			"--add-metadata",
 			"--metadata-from-title",
 			"%(artist)s - %(title)s",
-			"--newline",
-			"-R",
-			"infinite",
-			url,
-		}
+		}, args...)
 	} else {
 		fileExtension = ".mp4"
-		args = []string{
-			"-f",
-			formatID,
-			"--newline",
-			"-R",
-			"infinite",
+		ext := strings.Replace(fileExtension, ".", "", -1)
+		args = append([]string{
 			"-o",
 			filepath.Join(outputPath, "%(title)s.%(ext)s"),
-			url,
-		}
+			"--merge-output-format",
+			ext,
+			"--remux-video",
+			ext,
+		}, args...)
 	}
 
 	if !isPlaylist {
@@ -146,6 +142,7 @@ func doDownload(dm *DownloadManager, program *tea.Program, req types.DownloadReq
 		}
 	}
 
+	log.Print("args: ", args)
 	cmd := exec.CommandContext(ctx, ytDlpPath, args...)
 
 	dm.SetCmd(cmd)

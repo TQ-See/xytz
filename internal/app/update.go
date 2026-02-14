@@ -160,8 +160,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.ErrMsg = "Download cancelled"
 		m.FormatList.List.ResetSelected()
-		cmd = utils.CancelDownload(m.DownloadManager)
-		return m, cmd
+		return m, nil
 
 	case types.CancelSearchMsg:
 		m.State = types.StateSearchInput
@@ -236,12 +235,11 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.State = types.StateSearchInput
 					m.ErrMsg = ""
 					m.VideoList.List.ResetFilter()
-					m.VideoList.List.ResetSelected()
-					m.VideoList.List.SetFilterText("")
-					m.VideoList.PlaylistURL = ""
+					m.VideoList.List.Select(0)
 					return m, nil
 				}
 
+				m.VideoList.List.FilterInput.SetValue("")
 				m.VideoList.List.SetFilterState(list.Unfiltered)
 				return m, nil
 			}
@@ -264,6 +262,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						return m, nil
 					}
 
+					m.VideoList.List.FilterInput.SetValue("")
 					m.FormatList.List.SetFilterState(list.Unfiltered)
 					return m, nil
 				}
