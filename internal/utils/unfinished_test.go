@@ -179,7 +179,7 @@ func TestLoadUnfinished(t *testing.T) {
 			}
 		]`
 
-		if err := os.WriteFile(unfinishedPath, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(unfinishedPath, []byte(content), 0o644); err != nil {
 			t.Fatalf("Failed to write unfinished file: %v", err)
 		}
 
@@ -228,7 +228,7 @@ func TestRemoveUnfinished(t *testing.T) {
 				"timestamp": "2024-01-02T00:00:00Z"
 			}
 		]`
-		if err := os.WriteFile(unfinishedPath, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(unfinishedPath, []byte(content), 0o644); err != nil {
 			t.Fatalf("Failed to write unfinished file: %v", err)
 		}
 
@@ -271,7 +271,7 @@ func TestRemoveUnfinished(t *testing.T) {
 				"timestamp": "2024-01-01T00:00:00Z"
 			}
 		]`
-		if err := os.WriteFile(unfinishedPath, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(unfinishedPath, []byte(content), 0o644); err != nil {
 			t.Fatalf("Failed to write unfinished file: %v", err)
 		}
 
@@ -302,7 +302,7 @@ func TestRemoveUnfinished(t *testing.T) {
 		defer os.RemoveAll(tmpDir)
 
 		unfinishedPath := filepath.Join(tmpDir, "unfinished.json")
-		if err := os.WriteFile(unfinishedPath, []byte("[]"), 0644); err != nil {
+		if err := os.WriteFile(unfinishedPath, []byte("[]"), 0o644); err != nil {
 			t.Fatalf("Failed to write unfinished file: %v", err)
 		}
 
@@ -343,7 +343,7 @@ func TestGetUnfinishedByURL(t *testing.T) {
 				"timestamp": "2024-01-02T00:00:00Z"
 			}
 		]`
-		if err := os.WriteFile(unfinishedPath, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(unfinishedPath, []byte(content), 0o644); err != nil {
 			t.Fatalf("Failed to write unfinished file: %v", err)
 		}
 
@@ -382,7 +382,7 @@ func TestGetUnfinishedByURL(t *testing.T) {
 				"timestamp": "2024-01-01T00:00:00Z"
 			}
 		]`
-		if err := os.WriteFile(unfinishedPath, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(unfinishedPath, []byte(content), 0o644); err != nil {
 			t.Fatalf("Failed to write unfinished file: %v", err)
 		}
 

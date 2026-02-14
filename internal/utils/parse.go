@@ -10,6 +10,36 @@ import (
 	"github.com/xdagiz/xytz/internal/types"
 )
 
+func ParseSearchQuery(query string) (string, string) {
+	query = strings.TrimSpace(query)
+	if query == "" {
+		return "", ""
+	}
+
+	if strings.Contains(query, "youtube.com/playlist") ||
+		(strings.Contains(query, "watch?") && strings.Contains(query, "&list=")) {
+		playlistID := ExtractPlaylistID(query)
+		if playlistID != "" {
+			return "playlist", BuildPlaylistURL(playlistID)
+		}
+	}
+
+	if videoID := ExtractVideoID(query); videoID != "" {
+		return "video", BuildVideoURL(videoID)
+	}
+
+	isURL := strings.HasPrefix(query, "https://") || strings.HasPrefix(query, "youtube.com/")
+
+	if strings.HasPrefix(query, "@") ||
+		(isURL && strings.Contains(query, "/@")) ||
+		(isURL && strings.Contains(query, "/channel/")) ||
+		(isURL && strings.Contains(query, "/c/")) {
+		return "channel", BuildChannelURL(query)
+	}
+
+	return "search", "https://www.youtube.com/results?search_query=" + url.QueryEscape(query)
+}
+
 func extractAfterDelimiter(s, delimiter string, trailingDelimiters ...string) string {
 	parts := strings.Split(s, delimiter)
 	if len(parts) <= 1 {

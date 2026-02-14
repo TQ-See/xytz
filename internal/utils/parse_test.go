@@ -433,3 +433,126 @@ func TestParseVideoItem(t *testing.T) {
 		})
 	}
 }
+
+func TestParseSearchQuery(t *testing.T) {
+	tests := []struct {
+		name     string
+		query    string
+		expected string
+	}{
+		{
+			name:     "standard watch URL",
+			query:    "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+			expected: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+		},
+		{
+			name:     "watch URL with additional params",
+			query:    "https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=60",
+			expected: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+		},
+		{
+			name:     "short URL youtu.be",
+			query:    "https://youtu.be/dQw4w9WgXcQ",
+			expected: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+		},
+		{
+			name:     "short URL with params",
+			query:    "https://youtu.be/dQw4w9WgXcQ?t=60",
+			expected: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+		},
+		{
+			name:     "embed URL",
+			query:    "https://www.youtube.com/embed/dQw4w9WgXcQ",
+			expected: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+		},
+		{
+			name:     "full playlist URL",
+			query:    "https://www.youtube.com/playlist?list=PL1234567890",
+			expected: "https://www.youtube.com/playlist?list=PL1234567890",
+		},
+		{
+			name:     "playlist URL with additional params",
+			query:    "https://www.youtube.com/playlist?list=PL1234567890&flow=list",
+			expected: "https://www.youtube.com/playlist?list=PL1234567890",
+		},
+		{
+			name:     "at username",
+			query:    "@username",
+			expected: "https://www.youtube.com/@username/videos",
+		},
+		{
+			name:     "at username with numbers",
+			query:    "@channel123",
+			expected: "https://www.youtube.com/@channel123/videos",
+		},
+		{
+			name:     "youtube @ URL",
+			query:    "https://www.youtube.com/@username",
+			expected: "https://www.youtube.com/@username/videos",
+		},
+		{
+			name:     "youtube @ URL with videos path",
+			query:    "https://www.youtube.com/@username/videos",
+			expected: "https://www.youtube.com/@username/videos",
+		},
+		{
+			name:     "channel URL",
+			query:    "https://www.youtube.com/channel/UCxyz123",
+			expected: "https://www.youtube.com/channel/UCxyz123/videos",
+		},
+		{
+			name:     "channel URL with videos path",
+			query:    "https://www.youtube.com/channel/UCxyz123/videos",
+			expected: "https://www.youtube.com/channel/UCxyz123/videos",
+		},
+		{
+			name:     "c custom URL",
+			query:    "https://www.youtube.com/c/customname",
+			expected: "https://www.youtube.com/c/customname/videos",
+		},
+		{
+			name:     "channel ID (UC prefix)",
+			query:    "UCxyz123abc",
+			expected: "https://www.youtube.com/channel/UCxyz123abc/videos",
+		},
+		{
+			name:     "plain search query",
+			query:    "test video",
+			expected: "https://www.youtube.com/results?search_query=test+video",
+		},
+		{
+			name:     "plain search with special chars",
+			query:    "hello world",
+			expected: "https://www.youtube.com/results?search_query=hello+world",
+		},
+		{
+			name:     "single word search",
+			query:    "music",
+			expected: "https://www.youtube.com/results?search_query=music",
+		},
+		{
+			name:     "empty string",
+			query:    "",
+			expected: "",
+		},
+		{
+			name:     "whitespace only",
+			query:    "   ",
+			expected: "",
+		},
+		{
+			name:     "non-youtube URL returns search",
+			query:    "https://example.com/watch?v=abc123",
+			expected: "https://www.youtube.com/results?search_query=https%3A%2F%2Fexample.com%2Fwatch%3Fv%3Dabc123",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, result := ParseSearchQuery(tt.query)
+			if result != tt.expected {
+				t.Errorf("ParseSearchQuery(%q) = %q, want %q", tt.query, result, tt.expected)
+			}
+		})
+	}
+}

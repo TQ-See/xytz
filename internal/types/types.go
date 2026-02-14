@@ -16,7 +16,8 @@ const (
 )
 
 type StartSearchMsg struct {
-	Query string
+	Query   string
+	URLType string
 }
 
 type StartFormatMsg struct {

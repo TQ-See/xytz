@@ -37,15 +37,19 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case types.StartSearchMsg:
 		m.State = types.StateLoading
-		m.LoadingType = "search"
+		urlType, _ := utils.ParseSearchQuery(msg.Query)
+		m.LoadingType = urlType
 		m.CurrentQuery = strings.TrimSpace(msg.Query)
-		m.VideoList.IsChannelSearch = false
-		m.VideoList.IsPlaylistSearch = false
-		m.VideoList.ChannelName = ""
+		m.VideoList.IsChannelSearch = urlType == "channel"
+		m.VideoList.IsPlaylistSearch = urlType == "playlist"
+		if urlType == "channel" {
+			m.VideoList.ChannelName = utils.ExtractChannelUsername(msg.Query)
+		}
 		m.VideoList.PlaylistName = ""
 		m.VideoList.PlaylistURL = ""
 		cmd = utils.PerformSearch(m.SearchManager, msg.Query, m.Search.SortBy.GetSPParam(), m.Search.SearchLimit, m.Search.CookiesFromBrowser, m.Search.Cookies)
 		m.ErrMsg = ""
+		m.Search.ErrMsg = ""
 		m.Search.Input.SetValue("")
 
 	case types.StartFormatMsg:
@@ -216,6 +220,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch m.State {
 		case types.StateSearchInput:
 			m.Search, cmd = m.Search.Update(msg)
+			m.ErrMsg = ""
 
 		case types.StateLoading:
 			switch msg.String() {

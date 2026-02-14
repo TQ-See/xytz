@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"log"
-	"net/url"
 	"os/exec"
 	"strings"
 	"sync"
@@ -160,17 +159,13 @@ func PerformSearch(sm *SearchManager, query, sortParam string, searchLimit int, 
 	return tea.Cmd(func() tea.Msg {
 		query = strings.TrimSpace(query)
 
-		videoID := ExtractVideoID(query)
-		isURL := videoID != ""
-
-		if isURL {
-			url := BuildVideoURL(videoID)
+		urlType, url := ParseSearchQuery(query)
+		if urlType == "video" {
 			return types.StartFormatMsg{URL: url}
-		} else {
-			encodedQuery := url.QueryEscape(query)
-			searchURL := "https://www.youtube.com/results?search_query=" + encodedQuery + "&sp=" + sortParam
-			return executeYTDLP(sm, searchURL, searchLimit, cookiesBrowser, cookiesFile)
 		}
+
+		log.Print("urlType: ", urlType)
+		return executeYTDLP(sm, url, searchLimit, cookiesBrowser, cookiesFile)
 	})
 }
 

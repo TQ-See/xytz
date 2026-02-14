@@ -44,6 +44,8 @@ type SearchModel struct {
 	CookiesFromBrowser string
 	Cookies            string
 	LatestVersion      string
+	IsChannelInput     bool
+	ErrMsg             string
 }
 
 func NewSearchModel() SearchModel {
@@ -133,6 +135,11 @@ func (m SearchModel) View() string {
 	s.WriteRune('\n')
 
 	s.WriteString(styles.InputStyle.Render(m.Input.View()))
+
+	if m.ErrMsg != "" {
+		s.WriteString("\n")
+		s.WriteString(styles.ErrorMessageStyle.PaddingLeft(1).Render(m.ErrMsg))
+	}
 
 	if m.Autocomplete.Visible {
 		autocompleteView := m.Autocomplete.View()
@@ -311,6 +318,10 @@ func (m SearchModel) Update(msg tea.Msg) (SearchModel, tea.Cmd) {
 	m.Input, inputCmd = m.Input.Update(msg)
 	newValue := m.Input.Value()
 
+	if newValue != oldValue {
+		m.ErrMsg = ""
+	}
+
 	m.History.TrackEdit(oldValue, newValue)
 
 	if m.Autocomplete.Visible {
@@ -386,6 +397,13 @@ func (m SearchModel) handleEnterKey() (SearchModel, tea.Cmd) {
 
 	query := m.Input.Value()
 	if query == "" {
+		m.ErrMsg = "Please enter a query or URL"
+		return m, nil
+	}
+
+	if strings.HasPrefix(query, "@") && strings.Contains(query, " ") {
+		m.ErrMsg = "Username cannot contain spaces"
+		m.Input.SetValue("")
 		return m, nil
 	}
 
@@ -397,7 +415,7 @@ func (m SearchModel) handleEnterKey() (SearchModel, tea.Cmd) {
 
 	m.History.Add(query)
 	cmd := func() tea.Msg {
-		return types.StartSearchMsg{Query: query}
+		return types.StartSearchMsg{Query: query, URLType: "search"}
 	}
 
 	return m, cmd

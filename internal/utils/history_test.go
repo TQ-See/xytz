@@ -32,7 +32,7 @@ func TestLoadHistory(t *testing.T) {
 
 		historyPath := tmpDir + "/history"
 		content := "query1\nquery2\nquery3"
-		if err := os.WriteFile(historyPath, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(historyPath, []byte(content), 0o644); err != nil {
 			t.Fatalf("Failed to write history file: %v", err)
 		}
 
@@ -63,7 +63,7 @@ func TestLoadHistory(t *testing.T) {
 
 		historyPath := tmpDir + "/history"
 		content := "query1\n\nquery2\n   \nquery3"
-		if err := os.WriteFile(historyPath, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(historyPath, []byte(content), 0o644); err != nil {
 			t.Fatalf("Failed to write history file: %v", err)
 		}
 
@@ -90,7 +90,7 @@ func TestLoadHistory(t *testing.T) {
 
 		historyPath := tmpDir + "/history"
 		content := "  query1  \n\tquery2\t\nquery3"
-		if err := os.WriteFile(historyPath, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(historyPath, []byte(content), 0o644); err != nil {
 			t.Fatalf("Failed to write history file: %v", err)
 		}
 
@@ -156,7 +156,7 @@ func TestSaveHistory(t *testing.T) {
 
 		historyPath := tmpDir + "/history"
 		content := "query1\nquery2\nquery3"
-		if err := os.WriteFile(historyPath, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(historyPath, []byte(content), 0o644); err != nil {
 			t.Fatalf("Failed to write history file: %v", err)
 		}
 

@@ -8,16 +8,16 @@ import (
 
 func TestResolveQualityToFormat(t *testing.T) {
 	tests := []struct {
-		name          string
-		quality       string
-		videoFormats  []types.FormatItem
-		expected      string
+		name         string
+		quality      string
+		videoFormats []types.FormatItem
+		expected     string
 	}{
 		{
-			name:    "best quality empty formats",
-			quality: "best",
+			name:         "best quality empty formats",
+			quality:      "best",
 			videoFormats: []types.FormatItem{},
-			expected: "bv*+ba/b",
+			expected:     "bv*+ba/b",
 		},
 		{
 			name:    "best quality with formats",
@@ -36,10 +36,10 @@ func TestResolveQualityToFormat(t *testing.T) {
 			expected: "best-format",
 		},
 		{
-			name:    "empty quality empty formats",
-			quality: "",
+			name:         "empty quality empty formats",
+			quality:      "",
 			videoFormats: []types.FormatItem{},
-			expected: "bv*+ba/b",
+			expected:     "bv*+ba/b",
 		},
 		{
 			name:    "1080p exact match",
@@ -86,10 +86,10 @@ func TestResolveQualityToFormat(t *testing.T) {
 			expected: "format1",
 		},
 		{
-			name:    "unknown format returns as-is",
-			quality: "unknown-format",
+			name:         "unknown format returns as-is",
+			quality:      "unknown-format",
 			videoFormats: []types.FormatItem{},
-			expected: "unknown-format",
+			expected:     "unknown-format",
 		},
 		{
 			name:    "case insensitive quality",

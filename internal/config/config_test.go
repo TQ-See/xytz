@@ -44,7 +44,7 @@ func TestLoad(t *testing.T) {
 default_quality: 1080p
 default_download_path: "~/Downloads"
 `
-		if err := os.WriteFile(configPath, []byte(customConfig), 0644); err != nil {
+		if err := os.WriteFile(configPath, []byte(customConfig), 0o644); err != nil {
 			t.Fatalf("Failed to write config: %v", err)
 		}
 
@@ -66,7 +66,7 @@ default_download_path: "~/Downloads"
 		configPath := filepath.Join(tmpDir, "config.yaml")
 		partialConfig := `search_limit: 30
 `
-		if err := os.WriteFile(configPath, []byte(partialConfig), 0644); err != nil {
+		if err := os.WriteFile(configPath, []byte(partialConfig), 0o644); err != nil {
 			t.Fatalf("Failed to write config: %v", err)
 		}
 
