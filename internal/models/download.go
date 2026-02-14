@@ -150,13 +150,10 @@ func (m DownloadModel) View() string {
 
 	if m.Completed {
 		title := m.SelectedVideo.Title()
-		ext := ".mp4"
-		if m.FileExtension != "" {
-			ext = m.FileExtension
-		}
-
+		ext := "." + m.FileExtension
 		finalPath := filepath.Join(m.Destination, title+ext)
-		s.WriteString(styles.CompletionMessageStyle.Render("Video saved to " + finalPath))
+
+		s.WriteString(styles.CompletionMessageStyle.Render("Video saved to " + fmt.Sprintf("\"%s\"", finalPath)))
 		s.WriteRune('\n')
 		s.WriteRune('\n')
 		s.WriteString(styles.HelpStyle.Render("Press Enter to continue"))

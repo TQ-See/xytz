@@ -36,33 +36,21 @@ func StartDownload(dm *DownloadManager, program *tea.Program, req types.Download
 			cfg = config.GetDefault()
 		}
 
-		downloadPath := cfg.GetDownloadPath()
-
-		cb := req.CookiesFromBrowser
-		c := req.Cookies
-		if cb == "" {
-			cb = cfg.CookiesBrowser
-		}
-		if c == "" {
-			c = cfg.CookiesFile
-		}
-
-		go doDownload(dm, program, req, downloadPath, cfg.YTDLPPath, cfg.FFmpegPath, cb, c)
+		go doDownload(dm, program, req, cfg)
 		return nil
 	})
 }
 
-func doDownload(dm *DownloadManager, program *tea.Program, req types.DownloadRequest, outputPath, ytDlpPath, ffmpegPath, cookiesBrowser, cookiesFile string) {
+func doDownload(dm *DownloadManager, program *tea.Program, req types.DownloadRequest, cfg *config.Config) {
 	ctx, cancel := context.WithCancel(context.Background())
 	dm.SetContext(ctx, cancel)
 
-	if ytDlpPath == "" {
-		ytDlpPath = "yt-dlp"
-	}
-	if ffmpegPath == "" {
-		ffmpegPath = "ffmpeg"
+	ytdlpPath := "yt-dlp"
+	if cfg.YTDLPPath != "" {
+		ytdlpPath = cfg.YTDLPPath
 	}
 
+	downloadPath := cfg.GetDownloadPath()
 	url := req.URL
 	formatID := req.FormatID
 	abr := req.ABR
@@ -75,12 +63,7 @@ func doDownload(dm *DownloadManager, program *tea.Program, req types.DownloadReq
 
 	isPlaylist := strings.Contains(url, "/playlist?list=") || strings.Contains(url, "&list=")
 
-	var (
-		args          []string
-		fileExtension string
-	)
-
-	args = []string{
+	args := []string{
 		"-f",
 		formatID,
 		"--newline",
@@ -89,13 +72,14 @@ func doDownload(dm *DownloadManager, program *tea.Program, req types.DownloadReq
 		url,
 	}
 
+	var fileExtension string
 	if req.IsAudioTab {
 		audioQuality := fmt.Sprintf("%dK", int(abr))
-		fileExtension = ".mp3"
-		ext := strings.Replace(fileExtension, ".", "", -1)
+		ext := cfg.AudioFormat
+		fileExtension = ext
 		args = append([]string{
 			"-o",
-			filepath.Join(outputPath, "%(artist)s - %(title)s.%(ext)s"),
+			filepath.Join(downloadPath, "%(artist)s - %(title)s.%(ext)s"),
 			"--restrict-filenames",
 			"-x",
 			"--audio-format",
@@ -107,11 +91,11 @@ func doDownload(dm *DownloadManager, program *tea.Program, req types.DownloadReq
 			"%(artist)s - %(title)s",
 		}, args...)
 	} else {
-		fileExtension = ".mp4"
-		ext := strings.Replace(fileExtension, ".", "", -1)
+		ext := cfg.VideoFormat
+		fileExtension = ext
 		args = append([]string{
 			"-o",
-			filepath.Join(outputPath, "%(title)s.%(ext)s"),
+			filepath.Join(downloadPath, "%(title)s.%(ext)s"),
 			"--merge-output-format",
 			ext,
 			"--remux-video",
@@ -123,10 +107,24 @@ func doDownload(dm *DownloadManager, program *tea.Program, req types.DownloadReq
 		args = append([]string{"--no-playlist"}, args...)
 	}
 
-	if cookiesBrowser != "" {
-		args = append([]string{"--cookies-from-browser", cookiesBrowser}, args...)
-	} else if cookiesFile != "" {
-		args = append([]string{"--cookies", cookiesFile}, args...)
+	cb := req.CookiesFromBrowser
+	c := req.Cookies
+	if cb == "" {
+		cb = cfg.CookiesBrowser
+	}
+	if c == "" {
+		c = cfg.CookiesFile
+	}
+
+	if cb != "" {
+		args = append([]string{"--cookies-from-browser", cb}, args...)
+	} else if c != "" {
+		args = append([]string{"--cookies", c}, args...)
+	}
+
+	if cfg.FFmpegPath != "" {
+		ffmpegPath := cfg.FFmpegPath
+		args = append([]string{"--ffmpeg-path", ffmpegPath}, args...)
 	}
 
 	for _, opt := range req.Options {
@@ -143,7 +141,7 @@ func doDownload(dm *DownloadManager, program *tea.Program, req types.DownloadReq
 	}
 
 	log.Print("args: ", args)
-	cmd := exec.CommandContext(ctx, ytDlpPath, args...)
+	cmd := exec.CommandContext(ctx, ytdlpPath, args...)
 
 	dm.SetCmd(cmd)
 	dm.SetPaused(false)
@@ -179,6 +177,7 @@ func doDownload(dm *DownloadManager, program *tea.Program, req types.DownloadReq
 	readPipe := func(pipe io.Reader) {
 		defer wg.Done()
 		parser.ReadPipe(pipe, func(percent float64, speed, eta, status, destination string) {
+			log.Print("status: ", status)
 			program.Send(types.ProgressMsg{Percent: percent, Speed: speed, Eta: eta, Status: status, Destination: destination, FileExtension: fileExtension})
 		})
 	}
@@ -198,6 +197,7 @@ func doDownload(dm *DownloadManager, program *tea.Program, req types.DownloadReq
 
 	if err != nil {
 		errMsg := fmt.Sprintf("Download error: %v", err)
+		log.Print(errMsg)
 		program.Send(types.DownloadResultMsg{Err: errMsg})
 	} else {
 		if err := RemoveUnfinished(url); err != nil {

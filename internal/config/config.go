@@ -22,6 +22,8 @@ type Config struct {
 	EmbedChapters       bool   `yaml:"embed_chapters"`
 	FFmpegPath          string `yaml:"ffmpeg_path"`
 	YTDLPPath           string `yaml:"yt_dlp_path"`
+	VideoFormat         string `yaml:"video_format"`
+	AudioFormat         string `yaml:"audio_format"`
 	CookiesBrowser      string `yaml:"cookies_browser"`
 	CookiesFile         string `yaml:"cookies_file"`
 }
@@ -95,6 +97,14 @@ func (c *Config) applyDefaults() {
 
 	if c.SortByDefault == "" {
 		c.SortByDefault = defaults.SortByDefault
+	}
+
+	if c.VideoFormat == "" {
+		c.VideoFormat = defaults.VideoFormat
+	}
+
+	if c.AudioFormat == "" {
+		c.AudioFormat = defaults.AudioFormat
 	}
 }
 
