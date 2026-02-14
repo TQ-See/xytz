@@ -21,6 +21,11 @@ func GetConfigDir() string {
 		return filepath.Join(homeDir, "AppData", "Roaming", "xytz")
 
 	case "darwin":
+		xdgConfigHome := os.Getenv("XDG_CONFIG_HOME")
+		if xdgConfigHome != "" {
+			return filepath.Join(xdgConfigHome, "xytz")
+		}
+
 		return filepath.Join(homeDir, "Library", "Application Support", "xytz")
 
 	default:

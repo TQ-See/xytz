@@ -130,4 +130,22 @@ func TestPlatformSpecificPaths(t *testing.T) {
 			t.Errorf("GetDataDir() = %q, expected XDG_DATA_HOME to be respected", dir)
 		}
 	}
+
+	if runtime.GOOS == "darwin" {
+		t.Run("XDG_CONFIG_HOME respected on darwin", func(t *testing.T) {
+			t.Setenv("XDG_CONFIG_HOME", "/custom/config")
+			dir := GetConfigDir()
+			if dir != "/custom/config/xytz" {
+				t.Errorf("GetConfigDir() = %q, expected XDG_CONFIG_HOME to be respected on darwin", dir)
+			}
+		})
+
+		t.Run("XDG_DATA_HOME respected on darwin", func(t *testing.T) {
+			t.Setenv("XDG_DATA_HOME", "/custom/data")
+			dir := GetDataDir()
+			if dir != "/custom/data/xytz" {
+				t.Errorf("GetDataDir() = %q, expected XDG_DATA_HOME to be respected on darwin", dir)
+			}
+		})
+	}
 }
