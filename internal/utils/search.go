@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"log"
 	"os/exec"
@@ -13,6 +14,94 @@ import (
 	"github.com/xdagiz/xytz/internal/config"
 	"github.com/xdagiz/xytz/internal/types"
 )
+
+func runYTDLPCommand(sm *SearchManager, ytDlpPath, searchURL string, searchLimit int, args []string) ([]list.Item, []string, int, string, bool) {
+	playlistItems := fmt.Sprintf("1:%d", searchLimit)
+	cmdArgs := append(append([]string{}, args...),
+		"--flat-playlist",
+		"--dump-json",
+		"--playlist-items", playlistItems,
+		searchURL,
+	)
+
+	cmd := exec.Command(ytDlpPath, cmdArgs...)
+
+	sm.SetCmd(cmd)
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		errMsg := fmt.Sprintf("failed to get stdout pipe: %v", err)
+		return nil, nil, 0, errMsg, false
+	}
+	defer stdout.Close()
+
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		errMsg := fmt.Sprintf("failed to get stderr pipe: %v", err)
+		return nil, nil, 0, errMsg, false
+	}
+
+	defer stderr.Close()
+
+	if err := cmd.Start(); err != nil {
+		errMsg := fmt.Sprintf("failed to start search: %v", err)
+		return nil, nil, 0, errMsg, false
+	}
+
+	var videos []list.Item
+	skippedLiveShort := 0
+
+	scanner := bufio.NewScanner(stdout)
+	stderrScanner := bufio.NewScanner(stderr)
+	stderrLines := []string{}
+	var stderrWg sync.WaitGroup
+	stderrWg.Go(func() {
+		for stderrScanner.Scan() {
+			line := stderrScanner.Text()
+			stderrLines = append(stderrLines, line)
+			log.Printf("yt-dlp stderr: %s", line)
+		}
+	})
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		trimmedLine := strings.TrimSpace(line)
+
+		if trimmedLine == "" {
+			continue
+		}
+
+		videoItem, err := ParseVideoItem(trimmedLine)
+		if err != nil {
+			if errors.Is(err, ErrSkippedLiveShort) {
+				skippedLiveShort++
+				continue
+			}
+
+			log.Printf("Failed to parse video item: %v", err)
+			continue
+		}
+
+		videos = append(videos, videoItem)
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Printf("Scanner error: %v", err)
+	}
+
+	stderrWg.Wait()
+
+	if err := cmd.Wait(); err != nil {
+		log.Printf("yt-dlp command failed: %v", err)
+		log.Printf("stderr output: %v", stderrLines)
+	}
+
+	if sm.ClearAndCheckCanceled() {
+		return nil, nil, 0, "", true
+	}
+
+	return videos, stderrLines, skippedLiveShort, "", false
+}
 
 func executeYTDLP(sm *SearchManager, searchURL string, searchLimit int, cookiesBrowser, cookiesFile string) any {
 	cfg, err := config.Load()
@@ -38,8 +127,6 @@ func executeYTDLP(sm *SearchManager, searchURL string, searchLimit int, cookiesB
 		return types.SearchResultMsg{Err: errMsg}
 	}
 
-	playlistItems := fmt.Sprintf("1:%d", searchLimit)
-
 	if cookiesBrowser == "" {
 		cookiesBrowser = cfg.CookiesBrowser
 	}
@@ -54,81 +141,39 @@ func executeYTDLP(sm *SearchManager, searchURL string, searchLimit int, cookiesB
 		args = append(args, "--cookies", cookiesFile)
 	}
 
-	args = append(args,
-		"--flat-playlist",
-		"--dump-json",
-		"--playlist-items", playlistItems,
-		searchURL,
-	)
-
-	cmd := exec.Command(ytDlpPath, args...)
-
-	sm.SetCmd(cmd)
-
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		errMsg := fmt.Sprintf("failed to get stdout pipe: %v", err)
-		return types.SearchResultMsg{Err: errMsg}
-	}
-	defer stdout.Close()
-
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		errMsg := fmt.Sprintf("failed to get stderr pipe: %v", err)
-		return types.SearchResultMsg{Err: errMsg}
-	}
-
-	defer stderr.Close()
-
-	if err := cmd.Start(); err != nil {
-		errMsg := fmt.Sprintf("failed to start search: %v", err)
-		return types.SearchResultMsg{Err: errMsg}
-	}
-
+	targetLimit := searchLimit
+	fetchLimit := searchLimit
 	var videos []list.Item
+	var stderrLines []string
 
-	scanner := bufio.NewScanner(stdout)
-	stderrScanner := bufio.NewScanner(stderr)
-	stderrLines := []string{}
-	var stderrWg sync.WaitGroup
-	stderrWg.Go(func() {
-		for stderrScanner.Scan() {
-			line := stderrScanner.Text()
-			stderrLines = append(stderrLines, line)
-			log.Printf("yt-dlp stderr: %s", line)
-		}
-	})
+	for attempts := 0; attempts < 4; attempts++ {
+		var skippedLiveShort int
+		var errMsg string
+		var canceled bool
 
-	for scanner.Scan() {
-		line := scanner.Text()
-		trimmedLine := strings.TrimSpace(line)
-
-		if trimmedLine == "" {
-			continue
+		videos, stderrLines, skippedLiveShort, errMsg, canceled = runYTDLPCommand(sm, ytDlpPath, searchURL, fetchLimit, args)
+		if canceled {
+			return nil
 		}
 
-		videoItem, err := ParseVideoItem(trimmedLine)
-		if err != nil {
-			log.Printf("Failed to parse video item: %v", err)
-			continue
+		if errMsg != "" {
+			return types.SearchResultMsg{Err: errMsg}
 		}
 
-		videos = append(videos, videoItem)
-	}
+		if len(videos) >= targetLimit {
+			return types.SearchResultMsg{Videos: videos[:targetLimit]}
+		}
 
-	if err := scanner.Err(); err != nil {
-		log.Printf("Scanner error: %v", err)
-	}
+		if skippedLiveShort == 0 {
+			break
+		}
 
-	stderrWg.Wait()
+		nextLimit := targetLimit + skippedLiveShort
+		if nextLimit <= fetchLimit {
+			break
+		}
 
-	if err := cmd.Wait(); err != nil {
-		log.Printf("yt-dlp command failed: %v", err)
-		log.Printf("stderr output: %v", stderrLines)
-	}
-
-	if sm.ClearAndCheckCanceled() {
-		return nil
+		fetchLimit = nextLimit
 	}
 
 	var errMsg string

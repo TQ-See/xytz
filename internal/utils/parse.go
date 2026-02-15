@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -9,6 +10,8 @@ import (
 
 	"github.com/xdagiz/xytz/internal/types"
 )
+
+var ErrSkippedLiveShort = errors.New("skipping live/short content with zero duration")
 
 func ParseSearchQuery(query string) (string, string) {
 	query = strings.TrimSpace(query)
@@ -194,7 +197,7 @@ func ParseVideoItem(line string) (types.VideoItem, error) {
 	}
 
 	if durationFloat == 0 {
-		return types.VideoItem{}, fmt.Errorf("skipping live/short content with zero duration")
+		return types.VideoItem{}, ErrSkippedLiveShort
 	}
 
 	viewsStr := FormatNumber(viewCountFloat)

@@ -37,3 +37,5 @@ Thumbs.db
 *.old
 .fuse_*
 *.tar.gz
+.gomodcache
+.gocache

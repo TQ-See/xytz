@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/key"
 	"github.com/xdagiz/xytz/internal/models"
 	"github.com/xdagiz/xytz/internal/styles"
 	"github.com/xdagiz/xytz/internal/types"
@@ -28,14 +27,7 @@ func getStatusBarText(state types.State, cfg StatusBarConfig, helpKeys models.He
 	case types.StateSearchInput:
 		if cfg.HelpVisible {
 			return styles.StatusBarStyle.Padding(0).Italic(true).Render(
-				models.FormatKeysForStatusBar(models.StatusKeys{
-					Cancel: key.NewBinding(
-						key.WithKeys("esc"),
-						key.WithHelp("Esc", "cancel"),
-					),
-					Next: helpKeys.Next,
-					Prev: helpKeys.Prev,
-				}),
+				models.FormatKeysForStatusBar(models.SearchHelpStatusKeys(helpKeys)),
 			)
 		}
 
@@ -53,13 +45,7 @@ func getStatusBarText(state types.State, cfg StatusBarConfig, helpKeys models.He
 
 		return models.FormatKeysForStatusBar(cfg.Keys)
 	case types.StateLoading:
-		return models.FormatKeysForStatusBar(models.StatusKeys{
-			Quit: cfg.Keys.Quit,
-			Cancel: key.NewBinding(
-				key.WithKeys("esc", "c"),
-				key.WithHelp("Esc/c", "cancel"),
-			),
-		})
+		return models.FormatKeysForStatusBar(models.LoadingStatusKeys(cfg.Keys))
 	case types.StateVideoList:
 		if cfg.HasError {
 			return models.FormatKeysForStatusBar(models.StatusKeys{
@@ -130,7 +116,7 @@ func (m *Model) View() string {
 		IsPaused:      m.Download.Paused,
 		IsCompleted:   m.Download.Completed,
 		IsCancelled:   m.Download.Cancelled,
-		Keys:          models.GetStatusKeys(m.State, m.Search.Help.Visible, m.Search.ResumeList.Visible),
+		Keys:          models.GetStatusKeys(m.State, m.Search.ResumeList.Visible),
 		ResumeVisible: m.Search.ResumeList.Visible,
 	}
 

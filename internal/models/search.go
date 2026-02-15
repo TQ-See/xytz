@@ -55,17 +55,19 @@ func NewSearchModel() SearchModel {
 func NewSearchModelWithOptions(opts *CLIOptions) SearchModel {
 	ti := textinput.New()
 	ti.Placeholder = "Enter a query or URL"
-	ti.Focus()
 	ti.Prompt = "❯ "
 	ti.PromptStyle = ti.PromptStyle.Foreground(styles.PinkColor)
 	ti.PlaceholderStyle = ti.PlaceholderStyle.Foreground(styles.MutedColor)
+	ti.Focus()
 
 	cfg, _ := config.Load()
 
-	var defaultSort types.SortBy
-	var searchLimit int
-	var cookiesFromBrowser string
-	var cookies string
+	var (
+		defaultSort        types.SortBy
+		searchLimit        int
+		cookiesFromBrowser string
+		cookies            string
+	)
 
 	if opts != nil {
 		defaultSort = types.ParseSortBy(opts.SortBy)
@@ -116,7 +118,10 @@ func (m SearchModel) Init() tea.Cmd {
 func (m SearchModel) View() string {
 	var s strings.Builder
 	currentVersion := strings.TrimPrefix(version.GetVersion(), "v")
-	versionDisplay := "v" + currentVersion
+	versionDisplay := currentVersion
+	if currentVersion != "dev" {
+		versionDisplay = "v" + currentVersion
+	}
 
 	if m.LatestVersion != "" && currentVersion != "dev" && m.LatestVersion > currentVersion {
 		versionDisplay += " ✦ Update available!"
@@ -213,6 +218,7 @@ func (m SearchModel) Update(msg tea.Msg) (SearchModel, tea.Cmd) {
 			if updated, cmd, handled := m.handleResumeEsc(); handled {
 				return updated, cmd
 			}
+
 			m.Help.Hide()
 		}
 	}
@@ -261,6 +267,8 @@ func (m SearchModel) Update(msg tea.Msg) (SearchModel, tea.Cmd) {
 		return m, cmd
 
 	case tea.KeyMsg:
+		m.ErrMsg = ""
+
 		switch msg.Type {
 		case tea.KeyEnter:
 			return m.handleEnterKey()
@@ -304,6 +312,7 @@ func (m SearchModel) Update(msg tea.Msg) (SearchModel, tea.Cmd) {
 					if m.DownloadOptions[i].RequiresFFmpeg && !m.HasFFmpeg {
 						return m, nil
 					}
+
 					m.DownloadOptions[i].Enabled = !m.DownloadOptions[i].Enabled
 					return m, nil
 				}
@@ -317,10 +326,6 @@ func (m SearchModel) Update(msg tea.Msg) (SearchModel, tea.Cmd) {
 	oldValue := m.Input.Value()
 	m.Input, inputCmd = m.Input.Update(msg)
 	newValue := m.Input.Value()
-
-	if newValue != oldValue {
-		m.ErrMsg = ""
-	}
 
 	m.History.TrackEdit(oldValue, newValue)
 

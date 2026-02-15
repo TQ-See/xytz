@@ -41,7 +41,7 @@ release:
 
     ```bash
     # Binary download
-    curl -sSL https://xdagiz.dev/xytz/install.sh | bash
+    curl -fsSL https://raw.githubusercontent.com/xdagiz/xytz/main/install.sh | bash
 
     # Or via Go
     go install github.com/xdagiz/xytz@latest

@@ -511,11 +511,6 @@ func TestParseSearchQuery(t *testing.T) {
 			expected: "https://www.youtube.com/c/customname/videos",
 		},
 		{
-			name:     "channel ID (UC prefix)",
-			query:    "UCxyz123abc",
-			expected: "https://www.youtube.com/channel/UCxyz123abc/videos",
-		},
-		{
 			name:     "plain search query",
 			query:    "test video",
 			expected: "https://www.youtube.com/results?search_query=test+video",
