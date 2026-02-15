@@ -115,10 +115,10 @@ func (m SearchModel) Init() tea.Cmd {
 
 func (m SearchModel) View() string {
 	var s strings.Builder
-	currentVersion := version.GetVersion()
-	versionDisplay := currentVersion
+	currentVersion := strings.TrimPrefix(version.GetVersion(), "v")
+	versionDisplay := "v" + currentVersion
 
-	if m.LatestVersion != "" && currentVersion != "dev" && currentVersion != m.LatestVersion {
+	if m.LatestVersion != "" && currentVersion != "dev" && m.LatestVersion > currentVersion {
 		versionDisplay += " ✦ Update available!"
 	}
 

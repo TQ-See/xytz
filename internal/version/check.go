@@ -3,6 +3,7 @@ package version
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 )
 
 type ReleaseResponse struct {
@@ -21,5 +22,5 @@ func FetchLatestVersion() (string, error) {
 		return "", err
 	}
 
-	return release.TagName, nil
+	return strings.TrimPrefix(release.TagName, "v"), nil
 }
