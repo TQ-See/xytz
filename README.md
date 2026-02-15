@@ -29,12 +29,11 @@ https://github.com/user-attachments/assets/4e3f98c7-554f-4b9e-adac-52511ae69f32
 - **Resume Downloads** - Resume unfinished downloads with `/resume`
 - **Search History** - Persistent search history for quick access
 - **Keyboard Navigation** - Vim-style keybindings and intuitive shortcuts
-- **Cross-Platform** - Works on Linux and Windows (MacOS not tested)
+- **Cross-Platform** - Works on Linux, macOS, and Windows
 
 **Requirements:**
 
-- **yt-dlp** - Required for video search and download functionality
-  - Installation: https://github.com/yt-dlp/yt-dlp#installation
+- Installation: https://github.com/yt-dlp/yt-dlp#installation
 - **ffmpeg** - Required for full features
   - Installation: https://ffmpeg.org/download.html
 
@@ -95,6 +94,18 @@ xytz
 3. **Choose Format** - Select your preferred video/audio format
 4. **Download** - The download starts automatically
 
+## Configuration
+
+The config file location varies by operating system:
+
+| OS      | Config Location                                                                                                      |
+| ------- | -------------------------------------------------------------------------------------------------------------------- |
+| Linux   | `~/.config/xytz/config.yaml` (or `$XDG_CONFIG_HOME/xytz/config.yaml`)                                                |
+| macOS   | `~/.config/xytz/config.yaml` if `XDG_CONFIG_HOME` is set, otherwise `~/Library/Application Support/xytz/config.yaml` |
+| Windows | `%APPDATA%/xytz/config.yaml`                                                                                         |
+
+On first run, xytz will create the config file with default values if it doesn't exist.
+
 ## CLI Arguments
 
 xytz supports command-line arguments for quick access to search, channels, and playlists.
@@ -112,7 +123,7 @@ xytz supports command-line arguments for quick access to search, channels, and p
 | `--cookies-from-browser` |       | The browser name to load cookies from                |
 | `--cookies`              |       | Path to a `cookies.txt` file to read cookies from    |
 
-> **Note:** Default values for these flags are grabbed from the configuration file (`~/.config/xytz/config.yaml`).
+> **Note:** Default values for these flags are grabbed from the configuration file.
 
 ### Usage Examples
 
@@ -144,6 +155,8 @@ search_limit: 25 # Number of search results
 default_download_path: ~/Videos # Download destination
 default_quality: best # Default format selection (480p, 720p, 1080p, 4k...)
 sort_by_default: relevance # Default sort: relevance, date, views, rating
+video_format: mp4 # The format which videos are downloaded
+audio_format: mp3 # The format which audio files are downloaded
 embed_subtitles: false # Embed subtitles in downloads
 embed_metadata: true # Embed metadata in downloads
 embed_chapters: true # Embed chapters in downloads
