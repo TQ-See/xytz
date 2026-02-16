@@ -18,7 +18,10 @@ import (
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
-	queueLabel := strings.TrimSpace(m.CurrentQuery)
+	queueLabel := strings.TrimSpace(m.Download.QueueLabel)
+	if queueLabel == "" {
+		queueLabel = strings.TrimSpace(m.CurrentQuery)
+	}
 	if queueLabel == "" {
 		queueLabel = strings.TrimSpace(m.VideoList.PlaylistName)
 	}
@@ -102,6 +105,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.State = types.StateDownload
 		m.Download.Completed = false
 		m.Download.Cancelled = false
+		m.Download.QueueLabel = ""
 		if msg.SelectedVideo.ID != "" {
 			m.Download.SelectedVideo = msg.SelectedVideo
 		} else if m.SelectedVideo.ID == "" {
@@ -147,6 +151,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 			m.Download.IsQueue = true
+			m.Download.QueueLabel = queueLabel
 			m.Download.QueueTotal = len(videos)
 			m.Download.QueueIndex = 1
 			m.Download.SelectedVideo = videos[0]
@@ -241,8 +246,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					QueueTotal:         m.Download.QueueTotal,
 					URLs:               pendingQueueURLs(m.Download.QueueItems),
 					Videos:             pendingQueueVideos(m.Download.QueueItems),
-					UnfinishedKey:      utils.QueueUnfinishedKey(queueLabel),
-					UnfinishedTitle:    queueLabel,
+					UnfinishedKey:      utils.QueueUnfinishedKey(m.Download.QueueLabel),
+					UnfinishedTitle:    m.Download.QueueLabel,
 					UnfinishedDesc:     fmt.Sprintf("%d items left", remaining),
 					Title:              next.Video.Title(),
 					Options:            m.Search.DownloadOptions,
@@ -359,8 +364,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				ABR:                m.Download.QueueABR,
 				QueueIndex:         m.Download.QueueIndex,
 				QueueTotal:         m.Download.QueueTotal,
-				UnfinishedKey:      utils.QueueUnfinishedKey(queueLabel),
-				UnfinishedTitle:    queueLabel,
+				UnfinishedKey:      utils.QueueUnfinishedKey(m.Download.QueueLabel),
+				UnfinishedTitle:    m.Download.QueueLabel,
 				UnfinishedDesc:     fmt.Sprintf("%d items left", remaining),
 				Title:              m.Download.QueueItems[m.Download.QueueIndex-1].Video.Title(),
 				Options:            m.Search.DownloadOptions,
@@ -389,6 +394,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Download.CurrentETA = ""
 		m.Download.Phase = ""
 
+		remaining := queueRemaining(m.Download.QueueItems)
+
 		req := types.DownloadRequest{
 			URL:                m.Download.QueueItems[m.Download.QueueIndex-1].URL,
 			URLs:               pendingQueueURLs(m.Download.QueueItems),
@@ -398,6 +405,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			ABR:                m.Download.QueueABR,
 			QueueIndex:         m.Download.QueueIndex,
 			QueueTotal:         m.Download.QueueTotal,
+			UnfinishedKey:      utils.QueueUnfinishedKey(m.Download.QueueLabel),
+			UnfinishedTitle:    m.Download.QueueLabel,
+			UnfinishedDesc:     fmt.Sprintf("%d items left", remaining),
 			Title:              m.Download.QueueItems[m.Download.QueueIndex-1].Video.Title(),
 			Options:            m.Search.DownloadOptions,
 			CookiesFromBrowser: m.Search.CookiesFromBrowser,
@@ -476,6 +486,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.State = types.StateDownload
 		m.LoadingType = "queue"
 		m.Download.IsQueue = true
+		m.Download.QueueLabel = queueLabel
 		m.Download.QueueTotal = len(msg.Videos)
 		m.Download.QueueIndex = 1
 		m.Download.SelectedVideo = msg.Videos[0]
@@ -527,6 +538,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.State = types.StateDownload
 		m.LoadingType = "queue"
 		m.Download.IsQueue = true
+		m.Download.QueueLabel = queueLabel
 		sourceVideos := msg.Videos
 		m.Download.QueueTotal = len(sourceVideos)
 		m.Download.QueueIndex = 1
@@ -793,6 +805,7 @@ func (m *Model) resetDownloadState() {
 	m.Download.QueueIndex = 0
 	m.Download.QueueTotal = 0
 	m.Download.QueueFormatID = ""
+	m.Download.QueueLabel = ""
 	m.Download.QueueIsAudioTab = false
 	m.Download.QueueABR = 0
 	m.Download.QueueItems = nil

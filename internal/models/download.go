@@ -34,6 +34,7 @@ type DownloadModel struct {
 	QueueIndex      int
 	QueueTotal      int
 	QueueFormatID   string
+	QueueLabel      string
 	QueueIsAudioTab bool
 	QueueABR        float64
 	QueueError      string
@@ -211,8 +212,7 @@ func (m DownloadModel) View() string {
 	failed := m.countByStatus(types.QueueStatusError)
 
 	if m.IsQueue && len(m.QueueItems) > 0 {
-		s.WriteString(styles.SectionHeaderStyle.Render(fmt.Sprintf("📋 Queue: Video %d of %d", m.QueueIndex, m.QueueTotal)))
-		s.WriteRune('\n')
+		s.WriteString(styles.SectionHeaderStyle.Foreground(styles.MauveColor).Render(fmt.Sprintf("📋 Queue: Video %d of %d", m.QueueIndex, m.QueueTotal)))
 	}
 
 	if m.SelectedVideo.ID != "" {
@@ -254,7 +254,7 @@ func (m DownloadModel) View() string {
 		s.WriteRune('\n')
 
 		if len(m.QueueItems) > 0 {
-			s.WriteString(styles.SectionHeaderStyle.Render("Queue Items:"))
+			s.WriteString(styles.SectionHeaderStyle.Render("Queue Items"))
 			s.WriteRune('\n')
 			for i, item := range m.QueueItems {
 				s.WriteString(m.renderQueueItem(item, i == m.QueueIndex-1))
