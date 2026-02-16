@@ -17,7 +17,7 @@ func PauseDownload(dm *DownloadManager) tea.Cmd {
 			log.Print("pause not supported on windows")
 		}
 
-		return types.PauseDownloadMsg{}
+		return nil
 	})
 }
 
@@ -28,6 +28,6 @@ func ResumeDownload(dm *DownloadManager) tea.Cmd {
 			log.Print("resume not supported on windows")
 		}
 
-		return types.ResumeDownloadMsg{}
+		return nil
 	})
 }

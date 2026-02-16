@@ -33,7 +33,8 @@ https://github.com/user-attachments/assets/4e3f98c7-554f-4b9e-adac-52511ae69f32
 
 **Requirements:**
 
-- Installation: https://github.com/yt-dlp/yt-dlp#installation
+- **yt-dlp**: Core video downloader
+  - Installation: https://github.com/yt-dlp/yt-dlp#installation
 - **ffmpeg** - Required for full features
   - Installation: https://ffmpeg.org/download.html
 
