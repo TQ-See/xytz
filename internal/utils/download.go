@@ -214,8 +214,10 @@ func doDownload(dm *DownloadManager, program *tea.Program, req types.DownloadReq
 	wg.Add(2)
 	go readPipe(stdout)
 	go readPipe(stderr)
-	wg.Wait()
 	err = cmd.Wait()
+	_ = stdout.Close()
+	_ = stderr.Close()
+	wg.Wait()
 
 	if cmd.Process != nil && cmd.ProcessState != nil && !cmd.ProcessState.Exited() {
 		_ = cmd.Process.Kill()

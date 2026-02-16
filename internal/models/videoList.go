@@ -202,6 +202,7 @@ func (m VideoListModel) Update(msg tea.Msg) (VideoListModel, tea.Cmd) {
 				cmd = func() tea.Msg {
 					return types.BackFromVideoListMsg{}
 				}
+				return m, cmd
 			} else if len(m.List.Items()) == 0 {
 				return m, nil
 			}
