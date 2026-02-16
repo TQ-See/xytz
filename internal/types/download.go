@@ -40,7 +40,14 @@ type DownloadRequest struct {
 	IsAudioTab bool
 	ABR        float64
 
-	Title string
+	Title           string
+	QueueIndex      int
+	QueueTotal      int
+	URLs            []string
+	Videos          []VideoItem
+	UnfinishedKey   string
+	UnfinishedTitle string
+	UnfinishedDesc  string
 
 	Options []DownloadOption
 

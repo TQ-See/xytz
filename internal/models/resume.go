@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"github.com/xdagiz/xytz/internal/styles"
+	"github.com/xdagiz/xytz/internal/types"
 	"github.com/xdagiz/xytz/internal/utils"
 
 	"github.com/charmbracelet/bubbles/list"
@@ -12,13 +13,22 @@ import (
 
 type ResumeItem struct {
 	URL      string
+	URLs     []string
+	Videos   []types.VideoItem
 	TitleVal string
 	FormatID string
+	Desc     string
 }
 
-func (i ResumeItem) Title() string       { return i.TitleVal }
-func (i ResumeItem) Description() string { return i.URL }
-func (i ResumeItem) FilterValue() string { return i.TitleVal + " " + i.URL }
+func (i ResumeItem) Title() string { return i.TitleVal }
+func (i ResumeItem) Description() string {
+	if i.Desc != "" {
+		return i.Desc
+	}
+
+	return i.URL
+}
+func (i ResumeItem) FilterValue() string { return i.TitleVal + " " + i.URL + " " + i.Desc }
 
 type ResumeModel struct {
 	Visible bool
@@ -70,8 +80,11 @@ func (m *ResumeModel) LoadItems() {
 	for i, item := range items {
 		listItems[i] = ResumeItem{
 			URL:      item.URL,
+			URLs:     item.URLs,
+			Videos:   item.Videos,
 			TitleVal: item.Title,
 			FormatID: item.FormatID,
+			Desc:     item.Desc,
 		}
 	}
 
@@ -98,8 +111,11 @@ func (m *ResumeModel) SelectedItem() *utils.UnfinishedDownload {
 	if item, ok := m.List.SelectedItem().(ResumeItem); ok {
 		return &utils.UnfinishedDownload{
 			URL:      item.URL,
+			URLs:     item.URLs,
+			Videos:   item.Videos,
 			Title:    item.TitleVal,
 			FormatID: item.FormatID,
+			Desc:     item.Desc,
 		}
 	}
 

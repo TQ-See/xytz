@@ -391,6 +391,8 @@ func (m SearchModel) handleEnterKey() (SearchModel, tea.Cmd) {
 			cmd := func() tea.Msg {
 				return types.StartResumeDownloadMsg{
 					URL:      item.URL,
+					URLs:     item.URLs,
+					Videos:   item.Videos,
 					FormatID: item.FormatID,
 					Title:    item.Title,
 				}

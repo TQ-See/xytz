@@ -23,6 +23,8 @@ type StatusKeys struct {
 	Next            key.Binding
 	Prev            key.Binding
 	DownloadDefault key.Binding
+	SelectVideos    key.Binding
+	SelectAll       key.Binding
 }
 
 func newQuitKey() key.Binding {
@@ -95,6 +97,20 @@ func newDownloadDefaultKey() key.Binding {
 	)
 }
 
+func newSelectVideosKey() key.Binding {
+	return key.NewBinding(
+		key.WithKeys(" "),
+		key.WithHelp("Space", "select"),
+	)
+}
+
+func newSelectAllKey() key.Binding {
+	return key.NewBinding(
+		key.WithKeys("a"),
+		key.WithHelp("a", "select all"),
+	)
+}
+
 func GetStatusKeys(state types.State, resumeVisible bool) StatusKeys {
 	keys := StatusKeys{
 		Quit: newQuitKey(),
@@ -111,6 +127,8 @@ func GetStatusKeys(state types.State, resumeVisible bool) StatusKeys {
 	case types.StateVideoList:
 		keys.Back = newBackEscBKey()
 		keys.DownloadDefault = newDownloadDefaultKey()
+		keys.SelectVideos = newSelectVideosKey()
+		keys.SelectAll = newSelectAllKey()
 
 	case types.StateFormatList:
 		keys.Back = newBackEscBKey()
@@ -184,6 +202,8 @@ func orderedStatusFields(keys StatusKeys) []statusKeyField {
 		{name: "Next", binding: keys.Next},
 		{name: "Prev", binding: keys.Prev},
 		{name: "DownloadDefault", binding: keys.DownloadDefault},
+		{name: "SelectVideos", binding: keys.SelectVideos},
+		{name: "SelectAll", binding: keys.SelectAll},
 	}
 }
 

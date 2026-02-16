@@ -13,21 +13,24 @@ import (
 )
 
 type StatusBarConfig struct {
-	HasError      bool
-	HelpVisible   bool
-	IsPaused      bool
-	IsCompleted   bool
-	IsCancelled   bool
-	Keys          models.StatusKeys
-	ResumeVisible bool
+	HasError              bool
+	HelpVisible           bool
+	IsPaused              bool
+	IsCompleted           bool
+	IsCancelled           bool
+	Keys                  models.StatusKeys
+	ResumeVisible         bool
+	QueueDownloadComplete bool
+	SelectedVideosCount   int
+	ShowFormatSelect      bool
 }
 
-func getStatusBarText(state types.State, cfg StatusBarConfig, helpKeys models.HelpKeys) string {
-	switch state {
+func getStatusBarText(m *Model, cfg StatusBarConfig) string {
+	switch m.State {
 	case types.StateSearchInput:
 		if cfg.HelpVisible {
 			return styles.StatusBarStyle.Padding(0).Italic(true).Render(
-				models.FormatKeysForStatusBar(models.SearchHelpStatusKeys(helpKeys)),
+				models.FormatKeysForStatusBar(models.SearchHelpStatusKeys(m.Search.Help.Keys)),
 			)
 		}
 
@@ -53,10 +56,20 @@ func getStatusBarText(state types.State, cfg StatusBarConfig, helpKeys models.He
 				Enter: cfg.Keys.Enter,
 			})
 		}
+		if cfg.SelectedVideosCount > 0 {
+			return styles.StatusBarStyle.Padding(0).Italic(true).Render(
+				fmt.Sprintf("Selected: %d videos | %s", cfg.SelectedVideosCount,
+					models.FormatKeysForStatusBar(models.StatusKeys{
+						Quit: cfg.Keys.Quit,
+						Back: cfg.Keys.Back,
+					})),
+			)
+		}
 		return models.FormatKeysForStatusBar(models.StatusKeys{
 			Quit:            cfg.Keys.Quit,
 			Back:            cfg.Keys.Back,
 			DownloadDefault: cfg.Keys.DownloadDefault,
+			SelectVideos:    cfg.Keys.SelectVideos,
 		})
 	case types.StateFormatList:
 		return models.FormatKeysForStatusBar(models.StatusKeys{
@@ -111,16 +124,18 @@ func (m *Model) View() string {
 	}
 
 	statusCfg := StatusBarConfig{
-		HasError:      m.VideoList.ErrMsg != "",
-		HelpVisible:   m.Search.Help.Visible,
-		IsPaused:      m.Download.Paused,
-		IsCompleted:   m.Download.Completed,
-		IsCancelled:   m.Download.Cancelled,
-		Keys:          models.GetStatusKeys(m.State, m.Search.ResumeList.Visible),
-		ResumeVisible: m.Search.ResumeList.Visible,
+		HasError:            m.VideoList.ErrMsg != "",
+		HelpVisible:         m.Search.Help.Visible,
+		IsPaused:            m.Download.Paused,
+		IsCompleted:         m.Download.Completed,
+		IsCancelled:         m.Download.Cancelled,
+		Keys:                models.GetStatusKeys(m.State, m.Search.ResumeList.Visible),
+		ResumeVisible:       m.Search.ResumeList.Visible,
+		SelectedVideosCount: len(m.VideoList.SelectedVideos),
+		ShowFormatSelect:    false,
 	}
 
-	left := getStatusBarText(m.State, statusCfg, m.Search.Help.Keys)
+	left := getStatusBarText(m, statusCfg)
 
 	right := ""
 	if m.ErrMsg != "" {
@@ -166,6 +181,8 @@ func (m *Model) LoadingView() string {
 		loadingText = "Loading videos for channel " + styles.SpinnerStyle.Render("@"+m.VideoList.ChannelName)
 	case "playlist":
 		loadingText = fmt.Sprintf("Searching playlist: %s", styles.SpinnerStyle.Render(m.CurrentQuery))
+	case "queue":
+		loadingText = "Starting queue download..."
 	}
 
 	fmt.Fprintf(&s, "\n%s %s\n", m.Spinner.View(), loadingText)

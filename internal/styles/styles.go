@@ -42,6 +42,9 @@ var (
 				Padding(0, 0, 0, 3)
 	ListDimmedDesc = listStyle.Foreground(MutedColor)
 
+	ListSelectedQueueStyle = lipgloss.NewStyle().Foreground(PinkColor).Bold(true)
+	QueueSelectedItemStyle = lipgloss.NewStyle().Foreground(MauveColor).Bold(true)
+
 	ListContainer = lipgloss.NewStyle().PaddingBottom(1)
 
 	SpinnerStyle = lipgloss.NewStyle().Foreground(PinkColor)
@@ -55,6 +58,7 @@ var (
 	CompletionMessageStyle = lipgloss.NewStyle().Foreground(SuccessColor)
 	HelpStyle              = lipgloss.NewStyle().Foreground(MutedColor).Faint(true)
 	ErrorMessageStyle      = lipgloss.NewStyle().Foreground(ErrorColor)
+	WarningMessageStyle    = lipgloss.NewStyle().Foreground(WarningColor)
 
 	autocompleteStyle = lipgloss.NewStyle().PaddingLeft(1)
 	AutocompleteItem  = autocompleteStyle.
