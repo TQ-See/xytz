@@ -5,8 +5,6 @@ package utils
 import (
 	"log"
 
-	"github.com/xdagiz/xytz/internal/types"
-
 	tea "github.com/charmbracelet/bubbletea"
 )
 

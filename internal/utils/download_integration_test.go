@@ -96,6 +96,17 @@ func setupUnfinishedFilePath(t *testing.T) {
 	})
 }
 
+func setupDownloadConfigDir(t *testing.T) {
+	t.Helper()
+
+	orig := config.GetConfigDir
+	dir := filepath.Join(t.TempDir(), "config")
+	config.GetConfigDir = func() string { return dir }
+	t.Cleanup(func() {
+		config.GetConfigDir = orig
+	})
+}
+
 func waitForManagerReady(t *testing.T, dm *DownloadManager) {
 	t.Helper()
 
@@ -282,5 +293,82 @@ func TestDoDownload_CancelSendsCancelled(t *testing.T) {
 	last := results[len(results)-1]
 	if !strings.Contains(strings.ToLower(last.Err), "cancelled") {
 		t.Fatalf("expected cancellation error, got: %q", last.Err)
+	}
+}
+
+func TestStartDownload_PersistsSingleVideoInfoForResume(t *testing.T) {
+	setupUnfinishedFilePath(t)
+	setupDownloadConfigDir(t)
+
+	m, p := runCollectorProgram(t)
+	_ = m
+	dm := NewDownloadManager()
+
+	cmd := StartDownload(dm, p, types.DownloadRequest{
+		URL:      "https://www.youtube.com/watch?v=abc123",
+		FormatID: "best",
+		Title:    "Saved Title",
+	})
+	if cmd == nil {
+		t.Fatalf("expected non-nil start command")
+	}
+
+	msg := cmd()
+	if msg != nil {
+		t.Fatalf("start command msg = %T, want nil", msg)
+	}
+
+	entry := GetUnfinishedByURL("https://www.youtube.com/watch?v=abc123")
+	if entry == nil {
+		t.Fatalf("expected unfinished entry to exist")
+	}
+	if len(entry.Videos) != 1 {
+		t.Fatalf("entry.Videos len = %d, want 1", len(entry.Videos))
+	}
+	if entry.Videos[0].ID != "https://www.youtube.com/watch?v=abc123" {
+		t.Fatalf("entry.Videos[0].ID = %q, want URL", entry.Videos[0].ID)
+	}
+	if entry.Videos[0].VideoTitle != "Saved Title" {
+		t.Fatalf("entry.Videos[0].VideoTitle = %q, want %q", entry.Videos[0].VideoTitle, "Saved Title")
+	}
+}
+
+func TestStartDownload_PersistsFullSingleVideoMetadata(t *testing.T) {
+	setupUnfinishedFilePath(t)
+	setupDownloadConfigDir(t)
+
+	_, p := runCollectorProgram(t)
+	dm := NewDownloadManager()
+
+	video := types.VideoItem{
+		ID:         "https://www.youtube.com/watch?v=meta123",
+		VideoTitle: "Meta Title",
+		Desc:       "Meta Description",
+		Views:      12345,
+		Duration:   321,
+		Channel:    "Meta Channel",
+	}
+
+	cmd := StartDownload(dm, p, types.DownloadRequest{
+		URL:      video.ID,
+		FormatID: "best",
+		Title:    video.Title(),
+		Videos:   []types.VideoItem{video},
+	})
+	if cmd == nil {
+		t.Fatalf("expected non-nil start command")
+	}
+	_ = cmd()
+
+	entry := GetUnfinishedByURL(video.ID)
+	if entry == nil {
+		t.Fatalf("expected unfinished entry to exist")
+	}
+	if len(entry.Videos) != 1 {
+		t.Fatalf("entry.Videos len = %d, want 1", len(entry.Videos))
+	}
+	got := entry.Videos[0]
+	if got.Desc != "Meta Description" || got.Views != 12345 || got.Duration != 321 || got.Channel != "Meta Channel" {
+		t.Fatalf("video metadata not preserved: %+v", got)
 	}
 }

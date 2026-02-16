@@ -382,3 +382,53 @@ func TestModelUpdateRetryCurrentQueueItemClearsError(t *testing.T) {
 		t.Fatalf("m.Download.QueueError = %q, want empty", m.Download.QueueError)
 	}
 }
+
+func TestModelUpdateStartResumeDownloadUsesVideoInfoFromUnfinishedItem(t *testing.T) {
+	m := newQueueTestModel(t)
+
+	updated, cmd := m.Update(types.StartResumeDownloadMsg{
+		URL:      "https://www.youtube.com/watch?v=abc123",
+		FormatID: "best",
+		Title:    "Fallback Title",
+		Videos: []types.VideoItem{
+			{
+				ID:         "https://www.youtube.com/watch?v=abc123",
+				VideoTitle: "Real Video Title",
+				Channel:    "Real Channel",
+				Duration:   120,
+			},
+		},
+	})
+	m = updated.(*Model)
+
+	if cmd == nil {
+		t.Fatalf("expected non-nil download command")
+	}
+	if m.Download.SelectedVideo.VideoTitle != "Real Video Title" {
+		t.Fatalf("SelectedVideo.VideoTitle = %q, want %q", m.Download.SelectedVideo.VideoTitle, "Real Video Title")
+	}
+	if m.Download.SelectedVideo.Channel != "Real Channel" {
+		t.Fatalf("SelectedVideo.Channel = %q, want %q", m.Download.SelectedVideo.Channel, "Real Channel")
+	}
+}
+
+func TestModelUpdateStartResumeDownloadFallbacksToTitleAndURL(t *testing.T) {
+	m := newQueueTestModel(t)
+
+	updated, cmd := m.Update(types.StartResumeDownloadMsg{
+		URL:      "https://www.youtube.com/watch?v=xyz789",
+		FormatID: "best",
+		Title:    "Stored Title",
+	})
+	m = updated.(*Model)
+
+	if cmd == nil {
+		t.Fatalf("expected non-nil download command")
+	}
+	if m.Download.SelectedVideo.VideoTitle != "Stored Title" {
+		t.Fatalf("SelectedVideo.VideoTitle = %q, want %q", m.Download.SelectedVideo.VideoTitle, "Stored Title")
+	}
+	if m.Download.SelectedVideo.ID != "https://www.youtube.com/watch?v=xyz789" {
+		t.Fatalf("SelectedVideo.ID = %q, want URL", m.Download.SelectedVideo.ID)
+	}
+}

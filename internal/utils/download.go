@@ -19,6 +19,11 @@ import (
 
 func StartDownload(dm *DownloadManager, program *tea.Program, req types.DownloadRequest) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
+		videos := req.Videos
+		if len(videos) == 0 && req.Title != "" {
+			videos = []types.VideoItem{{ID: req.URL, VideoTitle: req.Title}}
+		}
+
 		key := req.UnfinishedKey
 		if key == "" {
 			key = req.URL
@@ -33,7 +38,7 @@ func StartDownload(dm *DownloadManager, program *tea.Program, req types.Download
 			Title:     title,
 			Desc:      req.UnfinishedDesc,
 			URLs:      req.URLs,
-			Videos:    req.Videos,
+			Videos:    videos,
 			Timestamp: time.Now(),
 		}
 

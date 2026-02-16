@@ -119,7 +119,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			FormatID:           msg.FormatID,
 			IsAudioTab:         msg.IsAudioTab,
 			ABR:                msg.ABR,
-			Title:              msg.SelectedVideo.Title(),
+			Title:              m.Download.SelectedVideo.Title(),
+			Videos:             []types.VideoItem{m.Download.SelectedVideo},
 			Options:            m.Search.DownloadOptions,
 			CookiesFromBrowser: m.Search.CookiesFromBrowser,
 			Cookies:            m.Search.Cookies,
@@ -195,11 +196,21 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		m.Download.SelectedVideo = types.VideoItem{VideoTitle: resumeTitle}
+		if len(resumeVideos) > 0 {
+			m.Download.SelectedVideo = resumeVideos[0]
+		} else if resumeTitle != "" {
+			m.Download.SelectedVideo = types.VideoItem{
+				ID:         msg.URL,
+				VideoTitle: resumeTitle,
+			}
+		}
 		req := types.DownloadRequest{
 			URL:                msg.URL,
 			FormatID:           resumeFormatID,
 			IsAudioTab:         false,
 			ABR:                0,
+			Title:              m.Download.SelectedVideo.Title(),
+			Videos:             []types.VideoItem{m.Download.SelectedVideo},
 			Options:            m.Search.DownloadOptions,
 			CookiesFromBrowser: m.Search.CookiesFromBrowser,
 			Cookies:            m.Search.Cookies,
