@@ -60,14 +60,16 @@ func getStatusBarText(m *Model, cfg StatusBarConfig) string {
 			return styles.StatusBarStyle.Padding(0).Italic(true).Render(
 				fmt.Sprintf("Selected: %d videos | %s", cfg.SelectedVideosCount,
 					models.FormatKeysForStatusBar(models.StatusKeys{
-						Quit: cfg.Keys.Quit,
-						Back: cfg.Keys.Back,
+						Quit:      cfg.Keys.Quit,
+						Back:      cfg.Keys.Back,
+						PlayVideo: cfg.Keys.PlayVideo,
 					})),
 			)
 		}
 		return models.FormatKeysForStatusBar(models.StatusKeys{
 			Quit:            cfg.Keys.Quit,
 			Back:            cfg.Keys.Back,
+			PlayVideo:       cfg.Keys.PlayVideo,
 			DownloadDefault: cfg.Keys.DownloadDefault,
 			SelectVideos:    cfg.Keys.SelectVideos,
 		})

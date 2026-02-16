@@ -12,6 +12,7 @@ type StatusKeys struct {
 	Quit            key.Binding
 	Back            key.Binding
 	Enter           key.Binding
+	PlayVideo       key.Binding
 	Pause           key.Binding
 	Cancel          key.Binding
 	Tab             key.Binding
@@ -66,6 +67,13 @@ func newPauseKey() key.Binding {
 	return key.NewBinding(
 		key.WithKeys("p", " "),
 		key.WithHelp("p/space", "pause"),
+	)
+}
+
+func newPlayVideoKey() key.Binding {
+	return key.NewBinding(
+		key.WithKeys("p"),
+		key.WithHelp("p", "play"),
 	)
 }
 
@@ -126,6 +134,7 @@ func GetStatusKeys(state types.State, resumeVisible bool) StatusKeys {
 
 	case types.StateVideoList:
 		keys.Back = newBackEscBKey()
+		keys.PlayVideo = newPlayVideoKey()
 		keys.DownloadDefault = newDownloadDefaultKey()
 		keys.SelectVideos = newSelectVideosKey()
 		keys.SelectAll = newSelectAllKey()
@@ -191,6 +200,7 @@ func orderedStatusFields(keys StatusKeys) []statusKeyField {
 		{name: "Quit", binding: keys.Quit},
 		{name: "Back", binding: keys.Back},
 		{name: "Enter", binding: keys.Enter},
+		{name: "PlayVideo", binding: keys.PlayVideo},
 		{name: "Pause", binding: keys.Pause},
 		{name: "Cancel", binding: keys.Cancel},
 		{name: "Tab", binding: keys.Tab},

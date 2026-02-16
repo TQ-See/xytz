@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/xdagiz/xytz/internal/config"
 	"github.com/xdagiz/xytz/internal/models"
 	"github.com/xdagiz/xytz/internal/types"
 	"github.com/xdagiz/xytz/internal/utils"
@@ -471,6 +472,20 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.clearSelections()
 		m.VideoList.ErrMsg = ""
 		m.VideoList.PlaylistURL = ""
+		return m, nil
+
+	case types.PlayVideoMsg:
+		if strings.TrimSpace(msg.URL) != "" {
+			playFormat := config.GetDefault().GetDefaultFormat()
+			cfg, err := config.Load()
+			if err != nil {
+				log.Printf("Warning: Failed to load config for mpv playback quality: %v", err)
+			} else {
+				playFormat = cfg.GetDefaultFormat()
+			}
+
+			utils.PlayURLWithMPV(msg.URL, playFormat)
+		}
 		return m, nil
 
 	case types.StartQueueConfirmMsg:

@@ -129,6 +129,19 @@ func (m *VideoListModel) UpdateListItems() {
 	m.List.SetItems(newItems)
 }
 
+func (m VideoListModel) selectedVideo() (types.VideoItem, bool) {
+	selectedItem := m.List.SelectedItem()
+	if sv, ok := selectedItem.(types.SelectableVideoItem); ok {
+		return sv.VideoItem, true
+	}
+
+	if v, ok := selectedItem.(types.VideoItem); ok {
+		return v, true
+	}
+
+	return types.VideoItem{}, false
+}
+
 func (m VideoListModel) Update(msg tea.Msg) (VideoListModel, tea.Cmd) {
 	var (
 		cmd     tea.Cmd
@@ -164,13 +177,8 @@ func (m VideoListModel) Update(msg tea.Msg) (VideoListModel, tea.Cmd) {
 					return m, cmd
 				}
 
-				selectedItem := m.List.SelectedItem()
-				var video types.VideoItem
-				if sv, ok := selectedItem.(types.SelectableVideoItem); ok {
-					video = sv.VideoItem
-				} else if v, ok := selectedItem.(types.VideoItem); ok {
-					video = v
-				} else {
+				video, ok := m.selectedVideo()
+				if !ok {
 					return m, nil
 				}
 
@@ -190,6 +198,24 @@ func (m VideoListModel) Update(msg tea.Msg) (VideoListModel, tea.Cmd) {
 					}
 				}
 			}
+
+		case "p":
+			if !m.List.SettingFilter() {
+				if m.ErrMsg != "" || len(m.List.Items()) == 0 {
+					return m, nil
+				}
+
+				video, ok := m.selectedVideo()
+				if !ok || video.ID == "" {
+					return m, nil
+				}
+
+				cmd = func() tea.Msg {
+					return types.PlayVideoMsg{URL: utils.BuildVideoURL(video.ID)}
+				}
+
+				return m, cmd
+			}
 		}
 
 		switch msg.Type {
@@ -207,13 +233,8 @@ func (m VideoListModel) Update(msg tea.Msg) (VideoListModel, tea.Cmd) {
 				return m, nil
 			}
 
-			selectedItem := m.List.SelectedItem()
-			var video types.VideoItem
-			if sv, ok := selectedItem.(types.SelectableVideoItem); ok {
-				video = sv.VideoItem
-			} else if v, ok := selectedItem.(types.VideoItem); ok {
-				video = v
-			} else {
+			video, ok := m.selectedVideo()
+			if !ok {
 				return m, nil
 			}
 
@@ -240,13 +261,9 @@ func (m VideoListModel) Update(msg tea.Msg) (VideoListModel, tea.Cmd) {
 
 		case tea.KeySpace:
 			if m.ErrMsg == "" {
-				selectedItem := m.List.SelectedItem()
-				var video types.VideoItem
-
-				if sv, ok := selectedItem.(types.SelectableVideoItem); ok {
-					video = sv.VideoItem
-				} else if v, ok := selectedItem.(types.VideoItem); ok {
-					video = v
+				video, ok := m.selectedVideo()
+				if !ok {
+					return m, nil
 				}
 
 				m.SelectedVideos = toggleVideoSelection(m.SelectedVideos, video)

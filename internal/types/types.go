@@ -28,6 +28,10 @@ type StartFormatMsg struct {
 	SelectedVideo VideoItem
 }
 
+type PlayVideoMsg struct {
+	URL string
+}
+
 type ProgressMsg struct {
 	Percent       float64
 	Speed         string

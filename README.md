@@ -27,6 +27,7 @@ https://github.com/user-attachments/assets/4e3f98c7-554f-4b9e-adac-52511ae69f32
 - **Format Selection** - Choose from available video/audio formats with quality indicators
 - **Download Management** - Real-time progress tracking with speed and ETA
 - **Resume Downloads** - Resume unfinished downloads with `/resume`
+- **Video Playback** - Play videos directly with mpv without downloading
 - **Search History** - Persistent search history for quick access
 - **Keyboard Navigation** - Vim-style keybindings and intuitive shortcuts
 - **Cross-Platform** - Works on Linux, macOS, and Windows
@@ -37,6 +38,8 @@ https://github.com/user-attachments/assets/4e3f98c7-554f-4b9e-adac-52511ae69f32
   - Installation: https://github.com/yt-dlp/yt-dlp#installation
 - **ffmpeg** - Required for full features
   - Installation: https://ffmpeg.org/download.html
+- **mpv** (optional) - For playing videos directly without downloading
+  - Installation: https://mpv.io/installation/
 
 ## Installation
 
