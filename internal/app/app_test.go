@@ -377,6 +377,59 @@ func TestAppTeaQueueErrorScreenShowsActions(t *testing.T) {
 	waitForViewContains(t, m, "[c/esc] Cancel queue")
 }
 
+
+func TestPlayVideoMsgTriggersMPVWithDefaultQuality(t *testing.T) {
+	setupAppTeaEnv(t)
+
+	origPlay := utils.PlayURLWithMPVFunc
+	t.Cleanup(func() {
+		utils.PlayURLWithMPVFunc = origPlay
+	})
+
+	var (
+		called    bool
+		calledURL string
+		formatArg string
+	)
+
+	utils.PlayURLWithMPVFunc = func(url string, ytdlFormat string) {
+		called = true
+		calledURL = url
+		formatArg = ytdlFormat
+	}
+
+	cfg, err := config.Load()
+	if err != nil {
+		t.Fatalf("config.Load() error: %v", err)
+	}
+	cfg.DefaultQuality = "720p"
+	if err := cfg.Save(); err != nil {
+		t.Fatalf("cfg.Save() error: %v", err)
+	}
+
+	m := NewModel()
+	videoURL := "https://www.youtube.com/watch?v=abc123"
+	updated, cmd := m.Update(types.PlayVideoMsg{URL: videoURL})
+	m = updated.(*Model)
+
+	if cmd != nil {
+		t.Fatalf("expected nil command")
+	}
+	if m == nil {
+		t.Fatalf("expected model")
+	}
+	if !called {
+		t.Fatalf("expected mpv launcher to be called")
+	}
+	if calledURL != videoURL {
+		t.Fatalf("launcher URL = %q, want %q", calledURL, videoURL)
+	}
+
+	wantFormat := config.ResolveQuality("720p")
+	if formatArg != wantFormat {
+		t.Fatalf("launcher format = %q, want %q", formatArg, wantFormat)
+	}
+}
 func TestModelInit_NoOptionsBaseBatchShape(t *testing.T) {
 	setupAppTeaEnv(t)
 
