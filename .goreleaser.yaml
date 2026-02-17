@@ -77,3 +77,14 @@ changelog:
       order: 400
     - title: Other work
       order: 9999
+homebrew_casks:
+  - name: xytz
+    repository:
+      owner: xdagiz
+      name: homebrew-tap
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+    homepage: "https://github.com/xdagiz/xytz"
+    description: "a beautiful TUI YouTube Downloader"
+  - dependencies:
+      - formula: yt-dlp
+      - formula: ffmpeg
