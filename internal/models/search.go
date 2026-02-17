@@ -324,6 +324,18 @@ func (m SearchModel) Update(msg tea.Msg) (SearchModel, tea.Cmd) {
 	}
 
 	oldValue := m.Input.Value()
+	if m.ResumeList.Visible {
+		m.ResumeList.List, cmd = m.ResumeList.List.Update(msg)
+		if keyMsg, ok := msg.(tea.KeyMsg); ok {
+			switch keyMsg.Type {
+			case tea.KeyDelete, tea.KeyCtrlD:
+				m.ResumeList.DeleteSelected()
+			}
+		}
+
+		return m, tea.Batch(cmd, autocompleteCmd)
+	}
+
 	m.Input, inputCmd = m.Input.Update(msg)
 	newValue := m.Input.Value()
 
@@ -335,16 +347,6 @@ func (m SearchModel) Update(msg tea.Msg) (SearchModel, tea.Cmd) {
 			m.Autocomplete.Hide()
 		} else {
 			m.Autocomplete.UpdateFilteredCommands(currentValue)
-		}
-	}
-
-	if m.ResumeList.Visible {
-		m.ResumeList.List, cmd = m.ResumeList.List.Update(msg)
-		if keyMsg, ok := msg.(tea.KeyMsg); ok {
-			switch keyMsg.Type {
-			case tea.KeyDelete, tea.KeyCtrlD:
-				m.ResumeList.DeleteSelected()
-			}
 		}
 	}
 

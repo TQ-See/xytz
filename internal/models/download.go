@@ -40,6 +40,8 @@ type DownloadModel struct {
 	QueueError      string
 }
 
+const destinationTitleMaxLen = 16
+
 func NewDownloadModel() DownloadModel {
 	pr := progress.New(progress.WithSolidFill(string(styles.InfoColor)))
 
@@ -206,6 +208,48 @@ func (m DownloadModel) countByStatus(status types.QueueStatus) int {
 	return count
 }
 
+func (m DownloadModel) currentDisplayDestination() string {
+	if m.FileDestination != "" {
+		return m.FileDestination
+	}
+
+	title := strings.TrimSpace(m.SelectedVideo.Title())
+	if title == "" {
+		return m.Destination
+	}
+
+	if m.FileExtension != "" {
+		return filepath.Join(m.Destination, title+"."+m.FileExtension)
+	}
+
+	return filepath.Join(m.Destination, title)
+}
+
+func truncateDestinationTitle(path string, maxTitleLen int) string {
+	if path == "" || maxTitleLen <= 0 {
+		return path
+	}
+
+	base := filepath.Base(path)
+	ext := strings.TrimPrefix(filepath.Ext(base), ".")
+	title := strings.TrimSuffix(base, filepath.Ext(base))
+	if len(title) <= maxTitleLen {
+		return path
+	}
+
+	truncated := title[:maxTitleLen] + "...."
+	if ext != "" {
+		truncated += ext
+	}
+
+	dir := filepath.Dir(path)
+	if dir == "." || dir == "" {
+		return truncated
+	}
+
+	return filepath.Join(dir, truncated)
+}
+
 func (m DownloadModel) View() string {
 	var s strings.Builder
 	completed := m.countByStatus(types.QueueStatusComplete)
@@ -294,9 +338,7 @@ func (m DownloadModel) View() string {
 			s.WriteRune('\n')
 			s.WriteString(styles.HelpStyle.Render("Press Enter to continue"))
 		} else {
-			title := m.SelectedVideo.Title()
-			ext := "." + m.FileExtension
-			finalPath := filepath.Join(m.Destination, title+ext)
+			finalPath := m.currentDisplayDestination()
 
 			s.WriteString(styles.CompletionMessageStyle.Render("Video saved to " + fmt.Sprintf("\"%s\"", finalPath)))
 			s.WriteRune('\n')
@@ -350,7 +392,7 @@ func (m DownloadModel) View() string {
 			s.WriteString("Time remaining: " + styles.TimeRemainingStyle.Render(m.CurrentETA))
 			s.WriteRune('\n')
 
-			s.WriteString("Destination: " + styles.DestinationStyle.Render(m.Destination))
+			s.WriteString("Destination: " + styles.DestinationStyle.Render(truncateDestinationTitle(m.currentDisplayDestination(), destinationTitleMaxLen)))
 			s.WriteRune('\n')
 		}
 

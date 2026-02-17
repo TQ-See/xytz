@@ -11,8 +11,6 @@ import (
 
 const HistoryFileName = "history"
 
-// GetHistoryFilePath returns the path to the history file.
-// It can be overridden for testing.
 var GetHistoryFilePath = func() string {
 	dataDir := paths.GetDataDir()
 	if err := paths.EnsureDirExists(dataDir); err != nil {

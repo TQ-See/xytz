@@ -377,6 +377,166 @@ func TestAppTeaQueueErrorScreenShowsActions(t *testing.T) {
 	waitForViewContains(t, m, "[c/esc] Cancel queue")
 }
 
+func TestAppEscInLoadingSearchTriggersCancelSearch(t *testing.T) {
+	setupAppTeaEnv(t)
+
+	m := NewModel()
+	m.State = types.StateLoading
+	m.LoadingType = "search"
+
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEsc})
+	m = updated.(*Model)
+	if cmd == nil {
+		t.Fatalf("expected non-nil cancel cmd")
+	}
+
+	msg := cmd()
+	cancelMsg, ok := msg.(types.CancelSearchMsg)
+	if !ok {
+		t.Fatalf("cmd msg type = %T, want types.CancelSearchMsg", msg)
+	}
+
+	updated, _ = m.Update(cancelMsg)
+	m = updated.(*Model)
+	if m.State != types.StateSearchInput {
+		t.Fatalf("m.State = %q, want %q", m.State, types.StateSearchInput)
+	}
+}
+
+func TestAppEscInLoadingFormatTriggersCancelFormats(t *testing.T) {
+	setupAppTeaEnv(t)
+
+	m := NewModel()
+	m.State = types.StateLoading
+	m.LoadingType = "format"
+
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEsc})
+	m = updated.(*Model)
+	if cmd == nil {
+		t.Fatalf("expected non-nil cancel cmd")
+	}
+
+	msg := cmd()
+	cancelMsg, ok := msg.(types.CancelFormatsMsg)
+	if !ok {
+		t.Fatalf("cmd msg type = %T, want types.CancelFormatsMsg", msg)
+	}
+
+	updated, _ = m.Update(cancelMsg)
+	m = updated.(*Model)
+	if m.State != types.StateVideoList {
+		t.Fatalf("m.State = %q, want %q", m.State, types.StateVideoList)
+	}
+}
+
+func TestAppEscInVideoListClearsSelectionFirst(t *testing.T) {
+	setupAppTeaEnv(t)
+
+	m := NewModel()
+	m.State = types.StateVideoList
+	m.VideoList.SetItems([]list.Item{types.VideoItem{ID: "a", VideoTitle: "A"}})
+	m.VideoList.SelectedVideos = []types.VideoItem{{ID: "a", VideoTitle: "A"}}
+
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEsc})
+	m = updated.(*Model)
+	if cmd != nil {
+		t.Fatalf("expected nil cmd when clearing selection")
+	}
+	if m.State != types.StateVideoList {
+		t.Fatalf("m.State = %q, want %q", m.State, types.StateVideoList)
+	}
+	if len(m.VideoList.SelectedVideos) != 0 {
+		t.Fatalf("SelectedVideos len = %d, want 0", len(m.VideoList.SelectedVideos))
+	}
+}
+
+func TestAppEscInVideoListBacksToSearchWhenNotFiltering(t *testing.T) {
+	setupAppTeaEnv(t)
+
+	m := NewModel()
+	m.State = types.StateVideoList
+	m.VideoList.SetItems([]list.Item{types.VideoItem{ID: "a", VideoTitle: "A"}})
+
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEsc})
+	m = updated.(*Model)
+	if cmd != nil {
+		t.Fatalf("expected nil cmd")
+	}
+	if m.State != types.StateSearchInput {
+		t.Fatalf("m.State = %q, want %q", m.State, types.StateSearchInput)
+	}
+}
+
+func TestAppEscInVideoListWhileFilteringStaysInVideoList(t *testing.T) {
+	setupAppTeaEnv(t)
+
+	m := NewModel()
+	m.State = types.StateVideoList
+	m.VideoList.SetItems([]list.Item{types.VideoItem{ID: "a", VideoTitle: "A"}})
+	m.VideoList.List.SetFilterState(list.Filtering)
+	m.VideoList.List.FilterInput.SetValue("a")
+
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEsc})
+	m = updated.(*Model)
+	if cmd != nil {
+		t.Fatalf("expected nil cmd")
+	}
+	if m.State != types.StateVideoList {
+		t.Fatalf("m.State = %q, want %q", m.State, types.StateVideoList)
+	}
+	if m.VideoList.List.FilterState() != list.Unfiltered {
+		t.Fatalf("filter state = %v, want %v", m.VideoList.List.FilterState(), list.Unfiltered)
+	}
+}
+
+func TestAppEscInFormatListBackBehavior(t *testing.T) {
+	setupAppTeaEnv(t)
+
+	t.Run("no selected video goes to search input", func(t *testing.T) {
+		m := NewModel()
+		m.State = types.StateFormatList
+		m.FormatList.ActiveTab = 0
+
+		updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEsc})
+		m = updated.(*Model)
+		if cmd != nil {
+			t.Fatalf("expected nil cmd")
+		}
+		if m.State != types.StateSearchInput {
+			t.Fatalf("m.State = %q, want %q", m.State, types.StateSearchInput)
+		}
+	})
+
+	t.Run("selected video goes to video list", func(t *testing.T) {
+		m := NewModel()
+		m.State = types.StateFormatList
+		m.SelectedVideo = types.VideoItem{ID: "a", VideoTitle: "A"}
+		m.FormatList.ActiveTab = 0
+
+		updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEsc})
+		m = updated.(*Model)
+		if cmd != nil {
+			t.Fatalf("expected nil cmd")
+		}
+		if m.State != types.StateVideoList {
+			t.Fatalf("m.State = %q, want %q", m.State, types.StateVideoList)
+		}
+	})
+}
+
+func TestAppEscInSearchInputHidesHelp(t *testing.T) {
+	setupAppTeaEnv(t)
+
+	m := NewModel()
+	m.State = types.StateSearchInput
+	m.Search.Help.Visible = true
+
+	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyEsc})
+	m = updated.(*Model)
+	if m.Search.Help.Visible {
+		t.Fatalf("expected help to be hidden after esc")
+	}
+}
 
 func TestPlayVideoMsgTriggersMPVWithDefaultQuality(t *testing.T) {
 	setupAppTeaEnv(t)
@@ -430,6 +590,7 @@ func TestPlayVideoMsgTriggersMPVWithDefaultQuality(t *testing.T) {
 		t.Fatalf("launcher format = %q, want %q", formatArg, wantFormat)
 	}
 }
+
 func TestModelInit_NoOptionsBaseBatchShape(t *testing.T) {
 	setupAppTeaEnv(t)
 
@@ -596,5 +757,243 @@ func TestModelInit_OptionPrecedencePlaylistOverAll(t *testing.T) {
 	}
 	if m.CurrentQuery != "PL999" {
 		t.Fatalf("m.CurrentQuery = %q, want PL999", m.CurrentQuery)
+	}
+}
+
+func TestAppCancelDownloadAfterResumeClearsAllState(t *testing.T) {
+	setupAppTeaEnv(t)
+
+	m := NewModel()
+	m.State = types.StateDownload
+	m.Download.SelectedVideo = types.VideoItem{ID: "abc", VideoTitle: "Test Video"}
+	m.Download.Progress.SetPercent(50.0)
+	m.Download.CurrentSpeed = "1.5 MB/s"
+	m.Download.CurrentETA = "10:00"
+	m.Download.Phase = "[download] 50.0%"
+	m.Download.FileDestination = "/tmp/downloads/video.mp4"
+	m.Download.FileExtension = "mp4"
+	m.Download.Paused = true
+
+	if !m.Download.Paused {
+		t.Fatalf("Initial Download.Paused = false, want true")
+	}
+
+	updated, _ := m.Update(types.ResumeDownloadMsg{})
+	m = updated.(*Model)
+
+	if m.Download.Paused {
+		t.Fatalf("Download.Paused = true, want false after resume")
+	}
+
+	updated, _ = m.Update(types.CancelDownloadMsg{})
+	m = updated.(*Model)
+
+	if !m.Download.Cancelled {
+		t.Fatalf("Download.Cancelled = false, want true after CancelDownloadMsg")
+	}
+
+	if m.State == types.StateDownload {
+		t.Fatalf("m.State = %q, want different state after cancel", m.State)
+	}
+}
+
+func TestAppCancelDownloadAfterResumeResetsProgress(t *testing.T) {
+	setupAppTeaEnv(t)
+
+	m := NewModel()
+	m.State = types.StateDownload
+	m.Download.SelectedVideo = types.VideoItem{ID: "abc", VideoTitle: "Test Video"}
+	m.Download.Progress.SetPercent(75.0)
+	m.Download.CurrentSpeed = "2.0 MB/s"
+	m.Download.CurrentETA = "5:00"
+	m.Download.Phase = "[download] 75.0%"
+	m.Download.Paused = true
+
+	updated, _ := m.Update(types.ResumeDownloadMsg{})
+	m = updated.(*Model)
+
+	if m.Download.Paused {
+		t.Fatalf("Download.Paused = true, want false after resume")
+	}
+
+	updated, _ = m.Update(types.CancelDownloadMsg{})
+	m = updated.(*Model)
+
+	if !m.Download.Cancelled {
+		t.Fatalf("Download.Cancelled = false, want true after cancel")
+	}
+}
+
+func TestAppCancelDownloadAfterResumeClearsDestination(t *testing.T) {
+	setupAppTeaEnv(t)
+
+	m := NewModel()
+	m.State = types.StateDownload
+	m.Download.SelectedVideo = types.VideoItem{ID: "abc", VideoTitle: "Test Video"}
+	m.Download.Destination = "/tmp/downloads"
+	m.Download.FileDestination = "/tmp/downloads/video.mp4"
+	m.Download.FileExtension = "mp4"
+	m.Download.Paused = true
+
+	updated, _ := m.Update(types.ResumeDownloadMsg{})
+	m = updated.(*Model)
+
+	if m.Download.Paused {
+		t.Fatalf("Download.Paused = true, want false after resume")
+	}
+
+	updated, _ = m.Update(types.CancelDownloadMsg{})
+	m = updated.(*Model)
+
+	if !m.Download.Cancelled {
+		t.Fatalf("Download.Cancelled = false, want true")
+	}
+}
+
+func TestAppCancelDownloadAfterPauseResumeCycleClearsState(t *testing.T) {
+	setupAppTeaEnv(t)
+
+	m := NewModel()
+	m.State = types.StateDownload
+	m.Download.SelectedVideo = types.VideoItem{ID: "abc", VideoTitle: "Test Video"}
+	m.Download.Progress.SetPercent(25.0)
+	m.Download.CurrentSpeed = "500 KB/s"
+	m.Download.CurrentETA = "20:00"
+
+	updated, _ := m.Update(types.PauseDownloadMsg{})
+	m = updated.(*Model)
+
+	if !m.Download.Paused {
+		t.Fatalf("Download.Paused = false, want true after pause")
+	}
+
+	updated, _ = m.Update(types.ResumeDownloadMsg{})
+	m = updated.(*Model)
+
+	if m.Download.Paused {
+		t.Fatalf("Download.Paused = true, want false after resume")
+	}
+
+	updated, _ = m.Update(types.PauseDownloadMsg{})
+	m = updated.(*Model)
+
+	if !m.Download.Paused {
+		t.Fatalf("Download.Paused = false, want true after second pause")
+	}
+
+	updated, _ = m.Update(types.ResumeDownloadMsg{})
+	m = updated.(*Model)
+
+	if m.Download.Paused {
+		t.Fatalf("Download.Paused = true, want false after second resume")
+	}
+
+	updated, _ = m.Update(types.CancelDownloadMsg{})
+	m = updated.(*Model)
+
+	if !m.Download.Cancelled {
+		t.Fatalf("Download.Cancelled = false, want true after cancel")
+	}
+}
+
+func TestAppStartResumeDownloadClearsAllState(t *testing.T) {
+	setupAppTeaEnv(t)
+
+	m := NewModel()
+	m.State = types.StateDownload
+	m.Download.SelectedVideo = types.VideoItem{ID: "abc", VideoTitle: "Old Video"}
+	m.Download.Progress.SetPercent(75.0)
+	m.Download.CurrentSpeed = "2.0 MB/s"
+	m.Download.CurrentETA = "5:00"
+	m.Download.Phase = "[download] 75.0% of 100%"
+	m.Download.FileDestination = "/tmp/downloads/old-video.mp4"
+	m.Download.FileExtension = "mp4"
+	m.Download.Paused = true
+	m.Download.Completed = false
+	m.Download.Cancelled = false
+
+	updated, _ := m.Update(types.StartResumeDownloadMsg{
+		URL:      "https://youtube.com/watch?v=newvideo",
+		URLs:     nil,
+		Videos:   nil,
+		FormatID: "best",
+		Title:    "New Video",
+	})
+	m = updated.(*Model)
+
+	if m.Download.CurrentSpeed != "" {
+		t.Fatalf("Download.CurrentSpeed = %q, want empty", m.Download.CurrentSpeed)
+	}
+	if m.Download.CurrentETA != "" {
+		t.Fatalf("Download.CurrentETA = %q, want empty", m.Download.CurrentETA)
+	}
+	if m.Download.Phase != "" {
+		t.Fatalf("Download.Phase = %q, want empty", m.Download.Phase)
+	}
+	if m.Download.FileDestination != "" {
+		t.Fatalf("Download.FileDestination = %q, want empty", m.Download.FileDestination)
+	}
+	if m.Download.FileExtension != "" {
+		t.Fatalf("Download.FileExtension = %q, want empty", m.Download.FileExtension)
+	}
+	if m.Download.Paused {
+		t.Fatalf("Download.Paused = true, want false")
+	}
+	if m.Download.Completed {
+		t.Fatalf("Download.Completed = true, want false")
+	}
+	if m.Download.Cancelled {
+		t.Fatalf("Download.Cancelled = true, want false")
+	}
+}
+
+func TestAppStartDownloadClearsAllState(t *testing.T) {
+	setupAppTeaEnv(t)
+
+	m := NewModel()
+	m.State = types.StateDownload
+	m.Download.SelectedVideo = types.VideoItem{ID: "abc", VideoTitle: "Old Video"}
+	m.Download.Progress.SetPercent(50.0)
+	m.Download.CurrentSpeed = "1.0 MB/s"
+	m.Download.CurrentETA = "10:00"
+	m.Download.Phase = "[download] 50.0%"
+	m.Download.FileDestination = "/tmp/downloads/old-video.mp4"
+	m.Download.FileExtension = "mp4"
+	m.Download.Paused = true
+	m.Download.Completed = false
+	m.Download.Cancelled = false
+
+	updated, _ := m.Update(types.StartDownloadMsg{
+		URL:           "https://youtube.com/watch?v=newvideo",
+		FormatID:      "best",
+		IsAudioTab:    false,
+		ABR:           0,
+		SelectedVideo: types.VideoItem{ID: "newvideo", VideoTitle: "New Video"},
+	})
+	m = updated.(*Model)
+
+	if m.Download.CurrentSpeed != "" {
+		t.Fatalf("Download.CurrentSpeed = %q, want empty", m.Download.CurrentSpeed)
+	}
+	if m.Download.CurrentETA != "" {
+		t.Fatalf("Download.CurrentETA = %q, want empty", m.Download.CurrentETA)
+	}
+	if m.Download.Phase != "" {
+		t.Fatalf("Download.Phase = %q, want empty", m.Download.Phase)
+	}
+	if m.Download.FileDestination != "" {
+		t.Fatalf("Download.FileDestination = %q, want empty", m.Download.FileDestination)
+	}
+	if m.Download.FileExtension != "" {
+		t.Fatalf("Download.FileExtension = %q, want empty", m.Download.FileExtension)
+	}
+	if m.Download.Paused {
+		t.Fatalf("Download.Paused = true, want false")
+	}
+	if m.Download.Completed {
+		t.Fatalf("Download.Completed = true, want false")
+	}
+	if m.Download.Cancelled {
+		t.Fatalf("Download.Cancelled = true, want false")
 	}
 }

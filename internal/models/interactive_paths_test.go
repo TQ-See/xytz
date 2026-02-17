@@ -165,6 +165,46 @@ func TestSearchModelResumeEscHidesList(t *testing.T) {
 	}
 }
 
+func TestSearchModelResumeNavigationDoesNotTypeIntoInput(t *testing.T) {
+	setupModelTestEnv(t)
+
+	now := time.Now()
+	err := utils.SaveUnfinished([]utils.UnfinishedDownload{
+		{
+			URL:       "https://example.com/v1",
+			Title:     "Video 1",
+			FormatID:  "best",
+			Timestamp: now,
+		},
+		{
+			URL:       "https://example.com/v2",
+			Title:     "Video 2",
+			FormatID:  "best",
+			Timestamp: now.Add(-time.Minute),
+		},
+	})
+	if err != nil {
+		t.Fatalf("SaveUnfinished error: %v", err)
+	}
+
+	m := NewSearchModel()
+	m.Input.SetValue("/resume")
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m = updated
+	if cmd != nil {
+		t.Fatalf("expected nil command when opening resume list")
+	}
+
+	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	m = updated
+	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
+	m = updated
+
+	if m.Input.Value() != "" {
+		t.Fatalf("input polluted by resume navigation: %q", m.Input.Value())
+	}
+}
+
 func TestVideoListSpaceTogglesSelection(t *testing.T) {
 	setupModelTestEnv(t)
 
@@ -251,6 +291,48 @@ func TestVideoListEnterWithErrorReturnsBackMessage(t *testing.T) {
 	msg := cmdMsg(t, cmd)
 	if _, ok := msg.(types.BackFromVideoListMsg); !ok {
 		t.Fatalf("cmd msg type = %T, want types.BackFromVideoListMsg", msg)
+	}
+}
+
+func TestVideoListPReturnsPlayVideoMsg(t *testing.T) {
+	setupModelTestEnv(t)
+
+	m := NewVideoListModel()
+	m.SetItems([]list.Item{types.VideoItem{ID: "abc123", VideoTitle: "Video A"}})
+	m.List.Select(0)
+
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'p'}})
+	m = updated
+
+	msg := cmdMsg(t, cmd)
+	got, ok := msg.(types.PlayVideoMsg)
+	if !ok {
+		t.Fatalf("cmd msg type = %T, want types.PlayVideoMsg", msg)
+	}
+	if got.URL != "https://www.youtube.com/watch?v=abc123" {
+		t.Fatalf("PlayVideoMsg.URL = %q, want %q", got.URL, "https://www.youtube.com/watch?v=abc123")
+	}
+}
+
+func TestVideoListPWhileFilteringDoesNothing(t *testing.T) {
+	setupModelTestEnv(t)
+
+	m := NewVideoListModel()
+	m.SetItems([]list.Item{types.VideoItem{ID: "abc123", VideoTitle: "Video A"}})
+	m.List.SetFilterState(list.Filtering)
+	m.List.FilterInput.SetValue("vid")
+	m.List.Select(0)
+
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'p'}})
+	m = updated
+
+	if cmd == nil {
+		return
+	}
+
+	msg := cmd()
+	if _, ok := msg.(types.PlayVideoMsg); ok {
+		t.Fatalf("did not expect types.PlayVideoMsg while filtering")
 	}
 }
 

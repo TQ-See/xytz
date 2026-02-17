@@ -104,9 +104,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case types.StartDownloadMsg:
 		m.State = types.StateDownload
-		m.Download.Completed = false
-		m.Download.Cancelled = false
-		m.Download.QueueLabel = ""
+		m.clearDownloadProgressState()
 		if msg.SelectedVideo.ID != "" {
 			m.Download.SelectedVideo = msg.SelectedVideo
 		} else if m.SelectedVideo.ID == "" {
@@ -131,8 +129,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case types.StartResumeDownloadMsg:
 		m.State = types.StateDownload
-		m.Download.Completed = false
-		m.Download.Cancelled = false
+		m.clearDownloadProgressState()
 		m.LoadingType = "download"
 		resumeURLs := msg.URLs
 		resumeVideos := msg.Videos
@@ -241,10 +238,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				next := &m.Download.QueueItems[m.Download.QueueIndex-1]
 				next.Status = types.QueueStatusDownloading
 				m.Download.SelectedVideo = next.Video
-				m.Download.Progress.SetPercent(0)
-				m.Download.CurrentSpeed = ""
-				m.Download.CurrentETA = ""
-				m.Download.Phase = ""
+				m.clearDownloadProgressState()
 
 				remaining := queueRemaining(m.Download.QueueItems)
 				updateQueueUnfinished(queueLabel, m.Download.QueueFormatID, remaining, pendingQueueURLs(m.Download.QueueItems), pendingQueueVideos(m.Download.QueueItems))
@@ -319,6 +313,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case types.CancelDownloadMsg:
 		m.Download.Cancelled = true
+		if m.DownloadManager != nil {
+			_ = m.DownloadManager.Cancel()
+		}
 		if m.Download.IsQueue {
 			for i := m.Download.QueueIndex - 1; i < len(m.Download.QueueItems); i++ {
 				if m.Download.QueueItems[i].Status == types.QueueStatusDownloading {
@@ -359,10 +356,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.Download.QueueIndex++
 			m.Download.QueueItems[m.Download.QueueIndex-1].Status = types.QueueStatusDownloading
 			m.Download.SelectedVideo = m.Download.QueueItems[m.Download.QueueIndex-1].Video
-			m.Download.Progress.SetPercent(0)
-			m.Download.CurrentSpeed = ""
-			m.Download.CurrentETA = ""
-			m.Download.Phase = ""
+			m.clearDownloadProgressState()
 
 			remaining := queueRemaining(m.Download.QueueItems)
 			updateQueueUnfinished(queueLabel, m.Download.QueueFormatID, remaining, pendingQueueURLs(m.Download.QueueItems), pendingQueueVideos(m.Download.QueueItems))
@@ -401,10 +395,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Download.QueueItems[m.Download.QueueIndex-1].Status = types.QueueStatusDownloading
 		m.Download.QueueItems[m.Download.QueueIndex-1].Error = ""
 		m.Download.QueueError = ""
-		m.Download.Progress.SetPercent(0)
-		m.Download.CurrentSpeed = ""
-		m.Download.CurrentETA = ""
-		m.Download.Phase = ""
+		m.clearDownloadProgressState()
 
 		remaining := queueRemaining(m.Download.QueueItems)
 
@@ -844,4 +835,17 @@ func (m *Model) resetDownloadState() {
 	m.Download.Paused = false
 	m.FormatList.IsQueue = false
 	m.FormatList.QueueVideos = nil
+}
+
+func (m *Model) clearDownloadProgressState() {
+	m.Download.Completed = false
+	m.Download.Cancelled = false
+	m.Download.FileDestination = ""
+	m.Download.FileExtension = ""
+	m.Download.CurrentSpeed = ""
+	m.Download.CurrentETA = ""
+	m.Download.Phase = ""
+	m.Download.Progress.SetPercent(0)
+	m.Download.Paused = false
+	m.Download.QueueLabel = ""
 }
