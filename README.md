@@ -2,20 +2,15 @@
 
 A beautiful TUI app for searching and downloading YouTube videos, built with Go and [Bubble Tea](https://github.com/charmbracelet/bubbletea).
 
-<p align="start">
-  <a href="https://github.com/xdagiz/xytz/blob/master/LICENSE">
-    <img alt="GitHub" src="https://img.shields.io/github/license/xdagiz/xytz"/>
-  </a>
-  <a href="https://goreportcard.com/report/github.com/xdagiz/xytz">
-    <img src="https://goreportcard.com/badge/github.com/xdagiz/xytz" />
-  </a>
-  <a href="https://github.com/xdagiz/xytz/issues">
-    <img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat" alt="CodeFactor" />
-  </a>
-  <a href="https://github.com/xdagiz/xytz/tags" rel="nofollow">
-    <img alt="GitHub tag (latest SemVer pre-release)" src="https://img.shields.io/github/v/tag/xdagiz/xytz?include_prereleases&label=version"/>
-  </a>
-</p>
+[![License: MIT](https://img.shields.io/github/license/xdagiz/xytz?style=flat)](https://github.com/xdagiz/xytz/blob/main/LICENSE)
+[![Stars](https://img.shields.io/github/stars/xdagiz/xytz?style=flat)](https://github.com/xdagiz/xytz/stargazers)
+[![Awesome](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](https://github.com/rothgar/awesome-tuis#multimedia)
+[![Release](https://img.shields.io/github/v/release/xdagiz/xytz?display_name=tag&sort=semver&style=flat)](https://github.com/xdagiz/xytz/releases)
+<br />
+[![Downloads](https://img.shields.io/github/downloads/xdagiz/xytz/total?style=flat)](https://github.com/xdagiz/xytz/releases)
+[![AUR](https://img.shields.io/aur/version/xytz-bin?style=flat&label=AUR)](https://aur.archlinux.org/packages/xytz-bin)
+[![Contributions](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/xdagiz/xytz/issues)
+[![Go Report Card](https://goreportcard.com/badge/github.com/xdagiz/xytz?style=flat)](https://goreportcard.com/report/github.com/xdagiz/xytz)
 
 https://github.com/user-attachments/assets/4e3f98c7-554f-4b9e-adac-52511ae69f32
 
@@ -43,29 +38,31 @@ https://github.com/user-attachments/assets/4e3f98c7-554f-4b9e-adac-52511ae69f32
 
 ## Installation
 
-### 1. Using Install Script (Linux/MacOS)
+### Installer Script (Linux/MacOS)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/xdagiz/xytz/main/install.sh | bash
 ```
 
-### 2. Using Go Install
-
-If you have Go installed, you can install directly:
+### Homebrew (MacOS)
 
 ```bash
-go install github.com/xdagiz/xytz@latest
+brew install xdagiz/tap/xytz
 ```
 
-### 3. From AUR (Arch Linux)
-
-If you're using an Arch-based distribution, you can install xytz from the AUR:
+### AUR (Arch Linux)
 
 ```bash
 yay -S xytz-bin
 ```
 
-### 4. Build from Source
+### Go Install
+
+```bash
+go install github.com/xdagiz/xytz@latest
+```
+
+### Build from Source
 
 **Requirements:**
 
