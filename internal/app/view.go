@@ -60,9 +60,9 @@ func getStatusBarText(m *Model, cfg StatusBarConfig) string {
 			return styles.StatusBarStyle.Padding(0).Italic(true).Render(
 				fmt.Sprintf("Selected: %d videos | %s", cfg.SelectedVideosCount,
 					models.FormatKeysForStatusBar(models.StatusKeys{
-						Quit:      cfg.Keys.Quit,
-						Back:      cfg.Keys.Back,
-						PlayVideo: cfg.Keys.PlayVideo,
+						Quit:            cfg.Keys.Quit,
+						DownloadDefault: cfg.Keys.DownloadDefault,
+						Back:            cfg.Keys.Back,
 					})),
 			)
 		}
@@ -99,6 +99,11 @@ func getStatusBarText(m *Model, cfg StatusBarConfig) string {
 			Pause:  cfg.Keys.Pause,
 			Cancel: cfg.Keys.Cancel,
 		})
+	case types.StateVideoPlaying:
+		return models.FormatKeysForStatusBar(models.StatusKeys{
+			Quit: cfg.Keys.Quit,
+			Back: cfg.Keys.Back,
+		})
 	default:
 		return models.FormatKeysForStatusBar(models.StatusKeys{
 			Quit: cfg.Keys.Quit,
@@ -123,6 +128,8 @@ func (m *Model) View() string {
 		content = m.FormatList.View()
 	case types.StateDownload:
 		content = m.Download.View()
+	case types.StateVideoPlaying:
+		content = m.Player.View()
 	}
 
 	statusCfg := StatusBarConfig{
@@ -185,6 +192,8 @@ func (m *Model) LoadingView() string {
 		loadingText = fmt.Sprintf("Searching playlist: %s", styles.SpinnerStyle.Render(m.CurrentQuery))
 	case "queue":
 		loadingText = "Starting queue download..."
+	case "video_playing":
+		loadingText = fmt.Sprintf("Starting mpv for: %s", m.Player.Video.Title())
 	}
 
 	fmt.Fprintf(&s, "\n%s %s\n", m.Spinner.View(), loadingText)

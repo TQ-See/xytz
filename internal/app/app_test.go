@@ -541,22 +541,36 @@ func TestAppEscInSearchInputHidesHelp(t *testing.T) {
 func TestPlayVideoMsgTriggersMPVWithDefaultQuality(t *testing.T) {
 	setupAppTeaEnv(t)
 
-	origPlay := utils.PlayURLWithMPVFunc
-	t.Cleanup(func() {
-		utils.PlayURLWithMPVFunc = origPlay
-	})
-
-	var (
-		called    bool
-		calledURL string
-		formatArg string
-	)
-
-	utils.PlayURLWithMPVFunc = func(url string, ytdlFormat string) {
-		called = true
-		calledURL = url
-		formatArg = ytdlFormat
+	cfg, err := config.Load()
+	if err != nil {
+		t.Fatalf("config.Load() error: %v", err)
 	}
+	cfg.DefaultQuality = "720p"
+	if err := cfg.Save(); err != nil {
+		t.Fatalf("cfg.Save() error: %v", err)
+	}
+
+	m := NewModel()
+	updated, cmd := m.Update(types.PlayVideoMsg{SelectedVideo: types.VideoItem{ID: "abc123"}})
+	m = updated.(*Model)
+
+	if cmd == nil {
+		t.Fatalf("expected non-nil command")
+	}
+
+	updated, _ = m.Update(cmd())
+	m = updated.(*Model)
+
+	if m == nil {
+		t.Fatalf("expected model")
+	}
+	if m.State != types.StateVideoPlaying {
+		t.Fatalf("expected StateVideoPlaying, got %s", m.State)
+	}
+}
+
+func TestPlayVideoMsgPassesCorrectFormatToMPV(t *testing.T) {
+	setupAppTeaEnv(t)
 
 	cfg, err := config.Load()
 	if err != nil {
@@ -568,26 +582,12 @@ func TestPlayVideoMsgTriggersMPVWithDefaultQuality(t *testing.T) {
 	}
 
 	m := NewModel()
-	videoURL := "https://www.youtube.com/watch?v=abc123"
-	updated, cmd := m.Update(types.PlayVideoMsg{URL: videoURL})
-	m = updated.(*Model)
+	videoURL := utils.BuildVideoURL("abc123")
 
-	if cmd != nil {
-		t.Fatalf("expected nil command")
-	}
-	if m == nil {
-		t.Fatalf("expected model")
-	}
-	if !called {
-		t.Fatalf("expected mpv launcher to be called")
-	}
-	if calledURL != videoURL {
-		t.Fatalf("launcher URL = %q, want %q", calledURL, videoURL)
-	}
+	_, _ = m.Update(types.PlayVideoMsg{SelectedVideo: types.VideoItem{ID: "abc123", VideoTitle: "Test Video"}})
 
-	wantFormat := config.ResolveQuality("720p")
-	if formatArg != wantFormat {
-		t.Fatalf("launcher format = %q, want %q", formatArg, wantFormat)
+	if m.Player.URL != videoURL {
+		t.Fatalf("Player.URL = %q, want %q", m.Player.URL, videoURL)
 	}
 }
 

@@ -54,6 +54,7 @@ func runYTDLPCommand(sm *SearchManager, ytDlpPath, searchURL string, searchLimit
 	scanner := bufio.NewScanner(stdout)
 	stderrScanner := bufio.NewScanner(stderr)
 	stderrLines := []string{}
+
 	var stderrWg sync.WaitGroup
 	stderrWg.Go(func() {
 		for stderrScanner.Scan() {
@@ -143,10 +144,12 @@ func executeYTDLP(sm *SearchManager, searchURL string, searchLimit int, cookiesB
 
 	targetLimit := searchLimit
 	fetchLimit := searchLimit
-	var videos []list.Item
-	var stderrLines []string
+	var (
+		videos      []list.Item
+		stderrLines []string
+	)
 
-	for attempts := 0; attempts < 4; attempts++ {
+	for range 4 {
 		var skippedLiveShort int
 		var errMsg string
 		var canceled bool
@@ -209,7 +212,6 @@ func PerformSearch(sm *SearchManager, query, sortParam string, searchLimit int, 
 			return types.StartFormatMsg{URL: url}
 		}
 
-		log.Print("urlType: ", urlType)
 		return executeYTDLP(sm, url, searchLimit, cookiesBrowser, cookiesFile)
 	})
 }

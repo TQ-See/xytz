@@ -309,8 +309,8 @@ func TestVideoListPReturnsPlayVideoMsg(t *testing.T) {
 	if !ok {
 		t.Fatalf("cmd msg type = %T, want types.PlayVideoMsg", msg)
 	}
-	if got.URL != "https://www.youtube.com/watch?v=abc123" {
-		t.Fatalf("PlayVideoMsg.URL = %q, want %q", got.URL, "https://www.youtube.com/watch?v=abc123")
+	if got.SelectedVideo.ID != "abc123" {
+		t.Fatalf("PlayVideoMsg.SelectedVideo.ID = %q, want %q", got.SelectedVideo.ID, "abc123")
 	}
 }
 

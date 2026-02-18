@@ -466,17 +466,28 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case types.PlayVideoMsg:
-		if strings.TrimSpace(msg.URL) != "" {
-			playFormat := config.GetDefault().GetDefaultFormat()
-			cfg, err := config.Load()
-			if err != nil {
-				log.Printf("Warning: Failed to load config for mpv playback quality: %v", err)
-			} else {
-				playFormat = cfg.GetDefaultFormat()
-			}
-
-			utils.PlayURLWithMPV(msg.URL, playFormat)
+		if m.State == types.StateVideoPlaying {
+			m.State = types.StateVideoList
+			m.Player = models.PlayerModel{}
+			return m, nil
 		}
+
+		m.Player.Video = msg.SelectedVideo
+		if m.Player.URL == "" {
+			m.Player.URL = utils.BuildVideoURL(msg.SelectedVideo.ID)
+		}
+
+		playFormat := config.GetDefault().GetDefaultFormat()
+		if cfg, err := config.Load(); err == nil {
+			playFormat = cfg.GetDefaultFormat()
+		}
+
+		cmd = utils.PlayURLWithMPV(m.Player.URL, playFormat, msg.SelectedVideo, m.Program)
+		return m, cmd
+
+	case types.MPVStartedMsg:
+		m.State = types.StateVideoPlaying
+		m.Player.Video = msg.SelectedVideo
 		return m, nil
 
 	case types.StartQueueConfirmMsg:
@@ -603,6 +614,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyCtrlC:
+			utils.KillMPV()
 			return m, tea.Quit
 		}
 
@@ -697,6 +709,16 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.clearSelections()
 				}
 
+				m.ErrMsg = ""
+				return m, nil
+			}
+
+		case types.StateVideoPlaying:
+			switch msg.String() {
+			case "b", "esc":
+				utils.KillMPV()
+				m.State = types.StateVideoList
+				// m.Player = models.PlayerModel{}
 				m.ErrMsg = ""
 				return m, nil
 			}

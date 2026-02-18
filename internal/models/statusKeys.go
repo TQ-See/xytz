@@ -147,6 +147,9 @@ func GetStatusKeys(state types.State, resumeVisible bool) StatusKeys {
 		keys.Enter = newEnterBackToSearchKey()
 		keys.Pause = newPauseKey()
 		keys.Cancel = newCancelEscCKey()
+
+	case types.StateVideoPlaying:
+		keys.Back = newBackEscBKey()
 	}
 
 	return keys

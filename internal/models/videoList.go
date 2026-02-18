@@ -211,7 +211,7 @@ func (m VideoListModel) Update(msg tea.Msg) (VideoListModel, tea.Cmd) {
 				}
 
 				cmd = func() tea.Msg {
-					return types.PlayVideoMsg{URL: utils.BuildVideoURL(video.ID)}
+					return types.PlayVideoMsg{SelectedVideo: video}
 				}
 
 				return m, cmd

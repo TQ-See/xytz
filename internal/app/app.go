@@ -1,6 +1,8 @@
 package app
 
 import (
+	"os/exec"
+
 	"github.com/xdagiz/xytz/internal/models"
 	"github.com/xdagiz/xytz/internal/styles"
 	"github.com/xdagiz/xytz/internal/types"
@@ -25,12 +27,14 @@ type Model struct {
 	VideoList       models.VideoListModel
 	FormatList      models.FormatListModel
 	Download        models.DownloadModel
+	Player          models.PlayerModel
 	SelectedVideo   types.VideoItem
 	ErrMsg          string
 	SearchManager   *utils.SearchManager
 	FormatsManager  *utils.FormatsManager
 	DownloadManager *utils.DownloadManager
 	latestVersion   string
+	MPVProcess      *exec.Cmd
 }
 
 func (m *Model) Init() tea.Cmd {
@@ -92,6 +96,7 @@ func NewModel() *Model {
 		VideoList:       models.NewVideoListModel(),
 		FormatList:      models.NewFormatListModel(),
 		Download:        models.NewDownloadModel(),
+		Player:          models.NewPlayer(),
 		SearchManager:   utils.NewSearchManager(),
 		FormatsManager:  utils.NewFormatsManager(),
 		DownloadManager: utils.NewDownloadManager(),
@@ -110,6 +115,7 @@ func NewModelWithOptions(opts *models.CLIOptions) *Model {
 		VideoList:       models.NewVideoListModel(),
 		FormatList:      models.NewFormatListModel(),
 		Download:        models.NewDownloadModel(),
+		Player:          models.NewPlayer(),
 		SearchManager:   utils.NewSearchManager(),
 		FormatsManager:  utils.NewFormatsManager(),
 		DownloadManager: utils.NewDownloadManager(),

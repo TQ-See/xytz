@@ -10,12 +10,13 @@ const GithubRepoLink = "https://github.com/xdagiz/xytz"
 type State string
 
 const (
-	StateSearchInput = "search_input"
-	StateLoading     = "loading"
-	StateVideoList   = "video_list"
-	StateFormatList  = "format_list"
-	StateDownload    = "download"
-	StateResumeList  = "resume_list"
+	StateSearchInput  = "search_input"
+	StateLoading      = "loading"
+	StateVideoList    = "video_list"
+	StateFormatList   = "format_list"
+	StateDownload     = "download"
+	StateResumeList   = "resume_list"
+	StateVideoPlaying = "video_playing"
 )
 
 type StartSearchMsg struct {
@@ -28,8 +29,18 @@ type StartFormatMsg struct {
 	SelectedVideo VideoItem
 }
 
+type StartPlayVideoMsg struct {
+	URL           string
+	SelectedVideo VideoItem
+}
+
 type PlayVideoMsg struct {
-	URL string
+	SelectedVideo VideoItem
+	ErrMsg        string
+}
+
+type MPVStartedMsg struct {
+	SelectedVideo VideoItem
 }
 
 type ProgressMsg struct {
