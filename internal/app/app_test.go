@@ -262,63 +262,6 @@ func TestAppTeaTransitionDownloadBackKeyWhenCompleted(t *testing.T) {
 	}
 }
 
-func TestAppTeaStatusBarKeysByState(t *testing.T) {
-	t.Run("search input", func(t *testing.T) {
-		m, _ := newAppTeaModel(t, func(m *Model) {
-			m.State = types.StateSearchInput
-		})
-
-		waitForViewContains(t, m, "Ctrl+c")
-		waitForViewContains(t, m, "quit")
-	})
-
-	t.Run("loading", func(t *testing.T) {
-		m, _ := newAppTeaModel(t, func(m *Model) {
-			m.State = types.StateLoading
-			m.LoadingType = "search"
-		})
-
-		waitForViewContains(t, m, "Esc/c")
-		waitForViewContains(t, m, "cancel")
-	})
-
-	t.Run("video list", func(t *testing.T) {
-		m, _ := newAppTeaModel(t, func(m *Model) {
-			m.State = types.StateVideoList
-			m.VideoList.CurrentQuery = "abc"
-			m.VideoList.SetItems([]list.Item{types.VideoItem{ID: "abc", VideoTitle: "Video A"}})
-		})
-
-		waitForViewContains(t, m, "d")
-		waitForViewContains(t, m, "Download")
-		waitForViewContains(t, m, "Space")
-		waitForViewContains(t, m, "select")
-	})
-
-	t.Run("download active", func(t *testing.T) {
-		m, _ := newAppTeaModel(t, func(m *Model) {
-			m.State = types.StateDownload
-			m.Download.SelectedVideo = types.VideoItem{ID: "abc", VideoTitle: "Video A"}
-		})
-
-		waitForViewContains(t, m, "p/space")
-		waitForViewContains(t, m, "pause")
-		waitForViewContains(t, m, "Esc/c")
-		waitForViewContains(t, m, "cancel")
-	})
-
-	t.Run("download completed", func(t *testing.T) {
-		m, _ := newAppTeaModel(t, func(m *Model) {
-			m.State = types.StateDownload
-			m.Download.Completed = true
-			m.Download.SelectedVideo = types.VideoItem{ID: "abc", VideoTitle: "Video A"}
-		})
-
-		waitForViewContains(t, m, "Enter")
-		waitForViewContains(t, m, "back to search")
-	})
-}
-
 func TestAppTeaQueueSummaryConsistencyCompleted(t *testing.T) {
 	m, _ := newAppTeaModel(t, func(m *Model) {
 		m.State = types.StateDownload

@@ -216,6 +216,30 @@ func (m VideoListModel) Update(msg tea.Msg) (VideoListModel, tea.Cmd) {
 
 				return m, cmd
 			}
+
+		case "ctrl+y":
+			if !m.List.SettingFilter() {
+				if m.ErrMsg != "" || len(m.List.Items()) == 0 {
+					return m, nil
+				}
+
+				video, ok := m.selectedVideo()
+				if !ok || video.ID == "" {
+					return m, nil
+				}
+
+				url := utils.BuildVideoURL(video.ID)
+				if err := utils.CopyToClipboard(url); err != nil {
+					m.ErrMsg = "Failed to copy url"
+					return m, nil
+				}
+
+				cmd = func() tea.Msg {
+					return types.ShowToastMsg{Message: "url copied to clipboard"}
+				}
+
+				return m, cmd
+			}
 		}
 
 		switch msg.Type {

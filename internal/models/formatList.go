@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/xdagiz/xytz/internal/styles"
@@ -294,6 +295,22 @@ func (m FormatListModel) Update(msg tea.Msg) (FormatListModel, tea.Cmd) {
 						DownloadOptions: m.DownloadOptions,
 					}
 				}
+			}
+		}
+
+		switch msg.String() {
+		case "ctrl+y":
+			if m.SelectedVideo.ID != "" {
+				url := utils.BuildVideoURL(m.SelectedVideo.ID)
+				if err := utils.CopyToClipboard(url); err != nil {
+					log.Printf("failed to copy to clipboard: %v", err)
+				}
+
+				cmd = func() tea.Msg {
+					return types.ShowToastMsg{Message: "url copied to clipboard"}
+				}
+
+				return m, cmd
 			}
 		}
 	}

@@ -157,7 +157,6 @@ func doDownload(dm *DownloadManager, program *tea.Program, req types.DownloadReq
 		}
 	}
 
-	log.Print("args: ", args)
 	cmd := exec.CommandContext(ctx, ytdlpPath, args...)
 
 	dm.SetCmd(cmd)

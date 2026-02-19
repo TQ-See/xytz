@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"log"
 	"path/filepath"
 	"strings"
 	"time"
@@ -133,6 +134,19 @@ func (m DownloadModel) Update(msg tea.Msg) (DownloadModel, tea.Cmd) {
 			case "c", "esc":
 				cmd = func() tea.Msg {
 					return types.CancelDownloadMsg{}
+				}
+			case "ctrl+y":
+				if m.SelectedVideo.ID != "" {
+					url := utils.BuildVideoURL(m.SelectedVideo.ID)
+					if err := utils.CopyToClipboard(url); err != nil {
+						log.Printf("failed to copy to clipboard: %v", err)
+					}
+
+					cmd = func() tea.Msg {
+						return types.ShowToastMsg{Message: "url copied to clipboard"}
+					}
+
+					return m, cmd
 				}
 			}
 		}

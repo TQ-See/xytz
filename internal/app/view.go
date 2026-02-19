@@ -72,12 +72,14 @@ func getStatusBarText(m *Model, cfg StatusBarConfig) string {
 			PlayVideo:       cfg.Keys.PlayVideo,
 			DownloadDefault: cfg.Keys.DownloadDefault,
 			SelectVideos:    cfg.Keys.SelectVideos,
+			CopyURL:         cfg.Keys.CopyURL,
 		})
 	case types.StateFormatList:
 		return models.FormatKeysForStatusBar(models.StatusKeys{
-			Quit: cfg.Keys.Quit,
-			Back: cfg.Keys.Back,
-			Tab:  cfg.Keys.Tab,
+			Quit:    cfg.Keys.Quit,
+			Back:    cfg.Keys.Back,
+			Tab:     cfg.Keys.Tab,
+			CopyURL: cfg.Keys.CopyURL,
 		})
 	case types.StateDownload:
 		if cfg.IsCompleted || cfg.IsCancelled {
@@ -89,15 +91,17 @@ func getStatusBarText(m *Model, cfg StatusBarConfig) string {
 		}
 		if cfg.IsPaused {
 			return models.FormatKeysForStatusBar(models.StatusKeys{
-				Quit:   cfg.Keys.Quit,
-				Pause:  cfg.Keys.Pause,
-				Cancel: cfg.Keys.Cancel,
+				Quit:    cfg.Keys.Quit,
+				Pause:   cfg.Keys.Pause,
+				Cancel:  cfg.Keys.Cancel,
+				CopyURL: cfg.Keys.CopyURL,
 			})
 		}
 		return models.FormatKeysForStatusBar(models.StatusKeys{
-			Quit:   cfg.Keys.Quit,
-			Pause:  cfg.Keys.Pause,
-			Cancel: cfg.Keys.Cancel,
+			Quit:    cfg.Keys.Quit,
+			Pause:   cfg.Keys.Pause,
+			Cancel:  cfg.Keys.Cancel,
+			CopyURL: cfg.Keys.CopyURL,
 		})
 	case types.StateVideoPlaying:
 		return models.FormatKeysForStatusBar(models.StatusKeys{
@@ -149,6 +153,8 @@ func (m *Model) View() string {
 	right := ""
 	if m.ErrMsg != "" {
 		right = lipgloss.NewStyle().Foreground(styles.ErrorColor).Render("⚠ " + m.ErrMsg)
+	} else if m.ToastMsg != "" {
+		right = lipgloss.NewStyle().Foreground(styles.InfoColor).Render("🛈  " + m.ToastMsg)
 	}
 
 	var statusBar string
@@ -160,7 +166,11 @@ func (m *Model) View() string {
 		rightSpace := availableWidth - leftWidth
 
 		if rightWidth > rightSpace && rightSpace > 0 {
-			right = lipgloss.NewStyle().Foreground(styles.ErrorColor).Width(rightSpace).MaxWidth(rightSpace).Render("⚠ " + m.ErrMsg)
+			if m.ErrMsg != "" {
+				right = lipgloss.NewStyle().Foreground(styles.ErrorColor).Width(rightSpace).MaxWidth(rightSpace).Render("⚠ " + m.ErrMsg)
+			} else if m.ToastMsg != "" {
+				right = lipgloss.NewStyle().Foreground(styles.InfoColor).Width(rightSpace).MaxWidth(rightSpace).Render("🛈 " + m.ToastMsg)
+			}
 		}
 
 		statusBar = styles.StatusBarStyle.Height(1).Width(m.Width).Render(left + lipgloss.PlaceHorizontal(availableWidth-leftWidth, lipgloss.Right, right))

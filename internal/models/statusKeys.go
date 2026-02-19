@@ -26,6 +26,7 @@ type StatusKeys struct {
 	DownloadDefault key.Binding
 	SelectVideos    key.Binding
 	SelectAll       key.Binding
+	CopyURL         key.Binding
 }
 
 func newQuitKey() key.Binding {
@@ -66,7 +67,7 @@ func newEnterBackToSearchKey() key.Binding {
 func newPauseKey() key.Binding {
 	return key.NewBinding(
 		key.WithKeys("p", " "),
-		key.WithHelp("p/space", "pause"),
+		key.WithHelp("p/ ␣ ", "pause"),
 	)
 }
 
@@ -101,14 +102,14 @@ func newDeleteKey() key.Binding {
 func newDownloadDefaultKey() key.Binding {
 	return key.NewBinding(
 		key.WithKeys("d"),
-		key.WithHelp("d", "Download"),
+		key.WithHelp("d", "download"),
 	)
 }
 
 func newSelectVideosKey() key.Binding {
 	return key.NewBinding(
 		key.WithKeys(" "),
-		key.WithHelp("Space", "select"),
+		key.WithHelp(" ␣ ", "select"),
 	)
 }
 
@@ -116,6 +117,13 @@ func newSelectAllKey() key.Binding {
 	return key.NewBinding(
 		key.WithKeys("a"),
 		key.WithHelp("a", "select all"),
+	)
+}
+
+func newCopyURLKey() key.Binding {
+	return key.NewBinding(
+		key.WithKeys("ctrl+y"),
+		key.WithHelp("Ctrl+y", "copy url"),
 	)
 }
 
@@ -138,15 +146,18 @@ func GetStatusKeys(state types.State, resumeVisible bool) StatusKeys {
 		keys.DownloadDefault = newDownloadDefaultKey()
 		keys.SelectVideos = newSelectVideosKey()
 		keys.SelectAll = newSelectAllKey()
+		keys.CopyURL = newCopyURLKey()
 
 	case types.StateFormatList:
 		keys.Back = newBackEscBKey()
+		keys.CopyURL = newCopyURLKey()
 
 	case types.StateDownload:
 		keys.Back = newBackBKey()
 		keys.Enter = newEnterBackToSearchKey()
 		keys.Pause = newPauseKey()
 		keys.Cancel = newCancelEscCKey()
+		keys.CopyURL = newCopyURLKey()
 
 	case types.StateVideoPlaying:
 		keys.Back = newBackEscBKey()
@@ -217,6 +228,7 @@ func orderedStatusFields(keys StatusKeys) []statusKeyField {
 		{name: "DownloadDefault", binding: keys.DownloadDefault},
 		{name: "SelectVideos", binding: keys.SelectVideos},
 		{name: "SelectAll", binding: keys.SelectAll},
+		{name: "CopyURL", binding: keys.CopyURL},
 	}
 }
 

@@ -2,6 +2,7 @@ package app
 
 import (
 	"os/exec"
+	"time"
 
 	"github.com/xdagiz/xytz/internal/models"
 	"github.com/xdagiz/xytz/internal/styles"
@@ -30,6 +31,8 @@ type Model struct {
 	Player          models.PlayerModel
 	SelectedVideo   types.VideoItem
 	ErrMsg          string
+	ToastMsg        string
+	ToastTimer      *time.Timer
 	SearchManager   *utils.SearchManager
 	FormatsManager  *utils.FormatsManager
 	DownloadManager *utils.DownloadManager

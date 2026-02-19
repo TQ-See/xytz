@@ -170,3 +170,9 @@ type StartPlaylistURLMsg struct {
 }
 
 type BackFromVideoListMsg struct{}
+
+type ShowToastMsg struct {
+	Message string
+}
+
+type ClearToastMsg struct{}

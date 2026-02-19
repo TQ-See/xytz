@@ -465,6 +465,17 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.VideoList.PlaylistURL = ""
 		return m, nil
 
+	case types.ShowToastMsg:
+		m.ToastMsg = msg.Message
+		return m, func() tea.Msg {
+			time.Sleep(3 * time.Second)
+			return types.ClearToastMsg{}
+		}
+
+	case types.ClearToastMsg:
+		m.ToastMsg = ""
+		return m, nil
+
 	case types.PlayVideoMsg:
 		if m.State == types.StateVideoPlaying {
 			m.State = types.StateVideoList
@@ -718,7 +729,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "b", "esc":
 				utils.KillMPV()
 				m.State = types.StateVideoList
-				// m.Player = models.PlayerModel{}
+				m.Player = models.PlayerModel{}
 				m.ErrMsg = ""
 				return m, nil
 			}
