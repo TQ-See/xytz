@@ -88,3 +88,23 @@ homebrew_casks:
   - dependencies:
       - formula: yt-dlp
       - formula: ffmpeg
+aurs:
+  - homepage: "https://github.com/xdagiz/xytz"
+    description: "a beautiful TUI YouTube Downloader"
+    maintainers:
+      - "Dagmawi Ali <xdagizjr2112 at gmail dot com>"
+    contributors:
+      - "Dagmawi Ali <xdagizjr2112 at gmail dot com>"
+
+    license: "MIT"
+
+    private_key: "{{ .Env.AUR_KEY }}"
+
+    git_url: "ssh://aur@aur.archlinux.org/xytz-bin.git"
+
+    depends:
+      - yt-dlp
+      - ffmpeg
+
+    optdepends:
+      - "mpv: for playing videos"
