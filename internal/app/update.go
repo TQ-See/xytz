@@ -493,7 +493,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			playFormat = cfg.GetDefaultFormat()
 		}
 
-		cmd = utils.PlayURLWithMPV(m.Player.URL, playFormat, msg.SelectedVideo, m.Program)
+		cmd = m.PlayerManager.PlayURL(m.Player.URL, playFormat, msg.SelectedVideo, m.Program)
 		return m, cmd
 
 	case types.MPVStartedMsg:
@@ -625,7 +625,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyCtrlC:
-			utils.KillMPV()
+			m.PlayerManager.Kill()
 			return m, tea.Quit
 		}
 
@@ -727,7 +727,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case types.StateVideoPlaying:
 			switch msg.String() {
 			case "b", "esc":
-				utils.KillMPV()
+				m.PlayerManager.Kill()
 				m.State = types.StateVideoList
 				m.Player = models.PlayerModel{}
 				m.ErrMsg = ""

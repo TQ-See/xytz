@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"log"
 	"os/exec"
 	"syscall"
@@ -9,12 +10,43 @@ import (
 	"github.com/xdagiz/xytz/internal/types"
 )
 
-var (
-	currentMPV             *exec.Cmd
-	mpvKilledIntentionally bool
-)
+type PlayerState struct {
+	Process             *exec.Cmd
+	KilledIntentionally bool
+}
 
-func PlayURLWithMPV(url string, ytdlFormat string, video types.VideoItem, program *tea.Program) tea.Cmd {
+type PlayerManager struct {
+	current *PlayerState
+}
+
+func NewPlayerManager() *PlayerManager {
+	return &PlayerManager{}
+}
+
+func (pm *PlayerManager) IsRunning() bool {
+	if pm.current == nil || pm.current.Process == nil {
+		return false
+	}
+
+	err := pm.current.Process.Process.Signal(syscall.Signal(0))
+	return err == nil
+}
+
+func (pm *PlayerManager) Kill() {
+	if pm.current == nil || pm.current.Process == nil {
+		return
+	}
+
+	pm.current.KilledIntentionally = true
+	if err := pm.current.Process.Process.Kill(); err != nil {
+		pm.current.KilledIntentionally = false
+		log.Printf("Failed to kill player: %v", err)
+	}
+
+	pm.current = nil
+}
+
+func (pm *PlayerManager) PlayURL(url string, ytdlFormat string, video types.VideoItem, program *tea.Program) tea.Cmd {
 	return func() tea.Msg {
 		args := make([]string, 0, 2)
 		if ytdlFormat != "" {
@@ -26,48 +58,31 @@ func PlayURLWithMPV(url string, ytdlFormat string, video types.VideoItem, progra
 
 		if err := cmd.Start(); err != nil {
 			log.Printf("Failed to play video with mpv: %v", err)
-			return types.PlayVideoMsg{ErrMsg: "Failed to play video with mpv"}
+			return types.PlayVideoMsg{ErrMsg: fmt.Sprintf("Failed to play video with mpv: %v", err)}
 		}
 
-		currentMPV = cmd
+		pm.current = &PlayerState{
+			Process:             cmd,
+			KilledIntentionally: false,
+		}
+
 		go func() {
 			err := cmd.Wait()
 
-			if !mpvKilledIntentionally {
+			if pm.current != nil && !pm.current.KilledIntentionally {
 				if err != nil {
 					log.Printf("mpv exited with error: %v", err)
 				}
 
-				currentMPV = nil
+				pm.current = nil
 				if program != nil {
 					program.Send(types.PlayVideoMsg{SelectedVideo: video})
 				}
 			} else {
-				currentMPV = nil
-				mpvKilledIntentionally = false
+				pm.current = nil
 			}
 		}()
 
 		return types.MPVStartedMsg{SelectedVideo: video}
 	}
-}
-
-func KillMPV() {
-	if currentMPV != nil {
-		mpvKilledIntentionally = true
-		if err := currentMPV.Process.Kill(); err != nil {
-			mpvKilledIntentionally = false
-		}
-
-		currentMPV = nil
-	}
-}
-
-func IsMPVRunning() bool {
-	if currentMPV == nil {
-		return false
-	}
-
-	err := currentMPV.Process.Signal(syscall.Signal(0))
-	return err == nil
 }

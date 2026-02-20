@@ -1,7 +1,6 @@
 package app
 
 import (
-	"os/exec"
 	"time"
 
 	"github.com/xdagiz/xytz/internal/models"
@@ -36,8 +35,8 @@ type Model struct {
 	SearchManager   *utils.SearchManager
 	FormatsManager  *utils.FormatsManager
 	DownloadManager *utils.DownloadManager
+	PlayerManager   *utils.PlayerManager
 	latestVersion   string
-	MPVProcess      *exec.Cmd
 }
 
 func (m *Model) Init() tea.Cmd {
@@ -103,6 +102,7 @@ func NewModel() *Model {
 		SearchManager:   utils.NewSearchManager(),
 		FormatsManager:  utils.NewFormatsManager(),
 		DownloadManager: utils.NewDownloadManager(),
+		PlayerManager:   utils.NewPlayerManager(),
 	}
 }
 
@@ -122,6 +122,7 @@ func NewModelWithOptions(opts *models.CLIOptions) *Model {
 		SearchManager:   utils.NewSearchManager(),
 		FormatsManager:  utils.NewFormatsManager(),
 		DownloadManager: utils.NewDownloadManager(),
+		PlayerManager:   utils.NewPlayerManager(),
 	}
 }
 
