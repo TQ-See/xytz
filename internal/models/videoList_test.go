@@ -1,0 +1,140 @@
+package models
+
+import (
+	"testing"
+
+	"github.com/charmbracelet/bubbles/list"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/xdagiz/xytz/internal/types"
+)
+
+func TestVideoListSpaceTogglesSelection(t *testing.T) {
+	setupModelTestEnv(t)
+
+	m := NewVideoListModel()
+	m.SetItems([]list.Item{types.VideoItem{ID: "a", VideoTitle: "Video A"}})
+	m.List.Select(0)
+
+	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeySpace})
+	m = updated
+	if len(m.SelectedVideos) != 1 || m.SelectedVideos[0].ID != "a" {
+		t.Fatalf("selected after first space = %#v, want one selected video", m.SelectedVideos)
+	}
+
+	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeySpace})
+	m = updated
+	if len(m.SelectedVideos) != 0 {
+		t.Fatalf("selected after second space = %#v, want empty", m.SelectedVideos)
+	}
+}
+
+func TestVideoListEnterWithSelectedVideosReturnsQueueConfirm(t *testing.T) {
+	setupModelTestEnv(t)
+
+	m := NewVideoListModel()
+	m.SetItems([]list.Item{
+		types.VideoItem{ID: "a", VideoTitle: "Video A"},
+		types.VideoItem{ID: "b", VideoTitle: "Video B"},
+	})
+	m.SelectedVideos = []types.VideoItem{
+		{ID: "a", VideoTitle: "Video A"},
+		{ID: "b", VideoTitle: "Video B"},
+	}
+	m.List.Select(0)
+
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m = updated
+
+	msg := cmdMsg(t, cmd)
+	got, ok := msg.(types.StartQueueConfirmMsg)
+	if !ok {
+		t.Fatalf("cmd msg type = %T, want types.StartQueueConfirmMsg", msg)
+	}
+	if len(got.Videos) != 2 {
+		t.Fatalf("queue confirm videos len = %d, want 2", len(got.Videos))
+	}
+}
+
+func TestVideoListDWithSelectedVideosReturnsQueueDownload(t *testing.T) {
+	setupModelTestEnv(t)
+
+	m := NewVideoListModel()
+	m.SetItems([]list.Item{
+		types.VideoItem{ID: "a", VideoTitle: "Video A"},
+		types.VideoItem{ID: "b", VideoTitle: "Video B"},
+	})
+	m.SelectedVideos = []types.VideoItem{
+		{ID: "a", VideoTitle: "Video A"},
+		{ID: "b", VideoTitle: "Video B"},
+	}
+	m.List.Select(0)
+
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'d'}})
+	m = updated
+
+	msg := cmdMsg(t, cmd)
+	got, ok := msg.(types.StartQueueDownloadMsg)
+	if !ok {
+		t.Fatalf("cmd msg type = %T, want types.StartQueueDownloadMsg", msg)
+	}
+	if len(got.Videos) != 2 {
+		t.Fatalf("queue download videos len = %d, want 2", len(got.Videos))
+	}
+}
+
+func TestVideoListEnterWithErrorReturnsBackMessage(t *testing.T) {
+	setupModelTestEnv(t)
+
+	m := NewVideoListModel()
+	m.ErrMsg = "Channel not found"
+
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m = updated
+
+	msg := cmdMsg(t, cmd)
+	if _, ok := msg.(types.BackFromVideoListMsg); !ok {
+		t.Fatalf("cmd msg type = %T, want types.BackFromVideoListMsg", msg)
+	}
+}
+
+func TestVideoListPReturnsPlayVideoMsg(t *testing.T) {
+	setupModelTestEnv(t)
+
+	m := NewVideoListModel()
+	m.SetItems([]list.Item{types.VideoItem{ID: "abc123", VideoTitle: "Video A"}})
+	m.List.Select(0)
+
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'p'}})
+	m = updated
+
+	msg := cmdMsg(t, cmd)
+	got, ok := msg.(types.PlayVideoMsg)
+	if !ok {
+		t.Fatalf("cmd msg type = %T, want types.PlayVideoMsg", msg)
+	}
+	if got.SelectedVideo.ID != "abc123" {
+		t.Fatalf("PlayVideoMsg.SelectedVideo.ID = %q, want %q", got.SelectedVideo.ID, "abc123")
+	}
+}
+
+func TestVideoListPWhileFilteringDoesNothing(t *testing.T) {
+	setupModelTestEnv(t)
+
+	m := NewVideoListModel()
+	m.SetItems([]list.Item{types.VideoItem{ID: "abc123", VideoTitle: "Video A"}})
+	m.List.SetFilterState(list.Filtering)
+	m.List.FilterInput.SetValue("vid")
+	m.List.Select(0)
+
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'p'}})
+	m = updated
+
+	if cmd == nil {
+		return
+	}
+
+	msg := cmd()
+	if _, ok := msg.(types.PlayVideoMsg); ok {
+		t.Fatalf("did not expect types.PlayVideoMsg while filtering")
+	}
+}
