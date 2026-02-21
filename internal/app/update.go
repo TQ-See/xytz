@@ -445,6 +445,37 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.ErrMsg = ""
 		return m, cmd
 
+	case types.StartPlayURLMsg:
+		m.State = types.StateLoading
+		m.LoadingType = "fetch_info"
+		m.Player.URL = msg.URL
+		cmd = utils.FetchVideoInfo(m.FormatsManager, msg.URL)
+		return m, cmd
+
+	case types.PlayURLResultMsg:
+		if msg.Err != "" {
+			m.State = types.StateSearchInput
+			if msg.Err != "Canceled" {
+				m.ErrMsg = msg.Err
+			}
+			m.Player = models.PlayerModel{}
+			return m, nil
+		}
+
+		m.Player.Video = msg.SelectedVideo
+		if m.Player.URL == "" {
+			m.Player.URL = utils.BuildVideoURL(msg.SelectedVideo.ID)
+		}
+
+		playFormat := config.GetDefault().GetDefaultFormat()
+		if cfg, err := config.Load(); err == nil {
+			playFormat = cfg.GetDefaultFormat()
+		}
+
+		m.State = types.StateVideoPlaying
+		cmd = m.PlayerManager.PlayURL(m.Player.URL, playFormat, msg.SelectedVideo, m.Program)
+		return m, cmd
+
 	case types.StartPlaylistURLMsg:
 		m.State = types.StateLoading
 		m.LoadingType = "playlist"
@@ -638,7 +669,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch msg.String() {
 			case "c", "esc":
 				switch m.LoadingType {
-				case "format":
+				case "format", "fetch_info":
 					cmd = utils.CancelFormats(m.FormatsManager)
 				default:
 					cmd = utils.CancelSearch(m.SearchManager)

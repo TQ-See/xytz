@@ -46,7 +46,10 @@ func getStatusBarText(m *Model, cfg StatusBarConfig) string {
 			)
 		}
 
-		return models.FormatKeysForStatusBar(cfg.Keys)
+		return models.FormatKeysForStatusBar(models.StatusKeys{
+			Quit:         cfg.Keys.Quit,
+			StarOnGithub: cfg.Keys.StarOnGithub,
+		})
 	case types.StateLoading:
 		return models.FormatKeysForStatusBar(models.LoadingStatusKeys(cfg.Keys))
 	case types.StateVideoList:

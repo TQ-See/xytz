@@ -27,6 +27,12 @@ var AllCommands = []Command{
 		HasArg:      true,
 	},
 	{
+		Name:        "play",
+		Description: "Play a video with url",
+		Usage:       "/play <url>",
+		HasArg:      true,
+	},
+	{
 		Name:        "resume",
 		Description: "Resume unfinished download",
 		Usage:       "/resume",

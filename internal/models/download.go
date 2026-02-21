@@ -282,6 +282,8 @@ func (m DownloadModel) View() string {
 		s.WriteRune('\n')
 		s.WriteString(styles.MutedStyle.Render(fmt.Sprintf("📺 %s", m.SelectedVideo.Channel)))
 		s.WriteRune('\n')
+		s.WriteString(lipgloss.NewStyle().Foreground(styles.PinkColor).Render(fmt.Sprintf("🔗 %s", utils.BuildVideoURL(m.SelectedVideo.ID))))
+		s.WriteRune('\n')
 	}
 
 	statusText := "⇣ Downloading"

@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/charmbracelet/lipgloss"
 	"github.com/xdagiz/xytz/internal/styles"
 	"github.com/xdagiz/xytz/internal/types"
 	"github.com/xdagiz/xytz/internal/utils"
@@ -109,6 +110,8 @@ func (m FormatListModel) View() string {
 		s.WriteString(styles.MutedStyle.Render(fmt.Sprintf("👁  %s views", utils.FormatNumber(m.SelectedVideo.Views))))
 		s.WriteRune('\n')
 		s.WriteString(styles.MutedStyle.Render(fmt.Sprintf("📺 %s", m.SelectedVideo.Channel)))
+		s.WriteRune('\n')
+		s.WriteString(lipgloss.NewStyle().Foreground(styles.PinkColor).Render(fmt.Sprintf("🔗 %s", utils.BuildVideoURL(m.SelectedVideo.ID))))
 		s.WriteRune('\n')
 	}
 

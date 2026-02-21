@@ -27,6 +27,7 @@ type StatusKeys struct {
 	SelectVideos    key.Binding
 	SelectAll       key.Binding
 	CopyURL         key.Binding
+	StarOnGithub    key.Binding
 }
 
 func newQuitKey() key.Binding {
@@ -127,6 +128,13 @@ func newCopyURLKey() key.Binding {
 	)
 }
 
+func newStarOnGithubKey() key.Binding {
+	return key.NewBinding(
+		key.WithKeys("ctrl+o"),
+		key.WithHelp("Ctrl+o", "★ star on github"),
+	)
+}
+
 func GetStatusKeys(state types.State, resumeVisible bool) StatusKeys {
 	keys := StatusKeys{
 		Quit: newQuitKey(),
@@ -135,6 +143,7 @@ func GetStatusKeys(state types.State, resumeVisible bool) StatusKeys {
 	switch state {
 	case types.StateSearchInput:
 		keys.Quit = newQuitCtrlCKey()
+		keys.StarOnGithub = newStarOnGithubKey()
 		if resumeVisible {
 			keys.Cancel = newCancelEscKey()
 			keys.Delete = newDeleteKey()
@@ -229,6 +238,7 @@ func orderedStatusFields(keys StatusKeys) []statusKeyField {
 		{name: "SelectVideos", binding: keys.SelectVideos},
 		{name: "SelectAll", binding: keys.SelectAll},
 		{name: "CopyURL", binding: keys.CopyURL},
+		{name: "StarOnGithub", binding: keys.StarOnGithub},
 	}
 }
 

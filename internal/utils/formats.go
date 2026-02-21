@@ -459,3 +459,64 @@ func CancelFormats(fm *FormatsManager) tea.Cmd {
 		return types.CancelFormatsMsg{}
 	})
 }
+
+func FetchVideoInfo(fm *FormatsManager, url string) tea.Cmd {
+	return tea.Cmd(func() tea.Msg {
+		cfg, err := config.Load()
+		if err != nil {
+			log.Printf("Warning: Failed to load config, using defaults: %v", err)
+			cfg = config.GetDefault()
+		}
+
+		ytDlpPath := cfg.YTDLPPath
+		if ytDlpPath == "" {
+			ytDlpPath = "yt-dlp"
+		}
+
+		cmd := exec.Command(ytDlpPath, "-J", url)
+
+		fm.SetCmd(cmd)
+
+		stdout, err := cmd.StdoutPipe()
+		if err != nil {
+			return types.PlayURLResultMsg{URL: url, Err: fmt.Sprintf("Failed to get video info: %v", err)}
+		}
+
+		if err := cmd.Start(); err != nil {
+			fm.Clear()
+			return types.PlayURLResultMsg{URL: url, Err: fmt.Sprintf("Failed to start yt-dlp: %v", err)}
+		}
+
+		out, err := io.ReadAll(stdout)
+		if closeErr := stdout.Close(); closeErr != nil {
+			log.Printf("failed to close video info stdout: %v", closeErr)
+		}
+
+		if fm.ClearAndCheckCanceled() {
+			return types.PlayURLResultMsg{URL: url, Err: "Canceled"}
+		}
+
+		if err != nil {
+			return types.PlayURLResultMsg{URL: url, Err: fmt.Sprintf("Failed to read video info: %v", err)}
+		}
+
+		if len(out) == 0 {
+			return types.PlayURLResultMsg{URL: url, Err: "No video info found"}
+		}
+
+		var data map[string]any
+		if err := json.Unmarshal(out, &data); err != nil {
+			return types.PlayURLResultMsg{URL: url, Err: fmt.Sprintf("Failed to parse video info: %v", err)}
+		}
+
+		videoInfo := extractVideoInfo(data)
+		if videoInfo.ID == "" {
+			return types.PlayURLResultMsg{URL: url, Err: "Could not extract video ID from URL"}
+		}
+
+		return types.PlayURLResultMsg{
+			URL:           url,
+			SelectedVideo: videoInfo,
+		}
+	})
+}

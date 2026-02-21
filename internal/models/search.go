@@ -143,7 +143,7 @@ func (m SearchModel) View() string {
 
 	if m.ErrMsg != "" {
 		s.WriteString("\n")
-		s.WriteString(styles.ErrorMessageStyle.PaddingLeft(1).Render(m.ErrMsg))
+		s.WriteString(styles.ErrorMessageStyle.PaddingLeft(1).Render("⚠ " + m.ErrMsg))
 	}
 
 	if m.Autocomplete.Visible {
@@ -432,11 +432,14 @@ func (m SearchModel) handleEnterKey() (SearchModel, tea.Cmd) {
 
 func (m *SearchModel) executeSlashCommand(slashCmd, query, args string) tea.Cmd {
 	var cmd tea.Cmd
+
 	switch slashCmd {
 	case "channel":
 		if args == "" {
 			m.Input.SetValue("/channel ")
 			m.Input.CursorEnd()
+		} else if len(strings.SplitAfter(args, " ")) > 1 {
+			m.ErrMsg = "Channel username cannot contain spaces"
 		} else {
 			m.History.Add(query)
 			channelName := utils.ExtractChannelUsername(args)
@@ -449,10 +452,25 @@ func (m *SearchModel) executeSlashCommand(slashCmd, query, args string) tea.Cmd 
 		if args == "" {
 			m.Input.SetValue("/playlist ")
 			m.Input.CursorEnd()
+		} else if len(strings.SplitAfter(args, " ")) > 1 {
+			m.ErrMsg = "Playlist id/url cannot contain spaces"
 		} else {
 			m.History.Add(query)
 			cmd = func() tea.Msg {
 				return types.StartPlaylistURLMsg{Query: args}
+			}
+		}
+
+	case "play":
+		if args == "" {
+			m.Input.SetValue("/play ")
+			m.Input.CursorEnd()
+		} else if len(strings.SplitAfter(args, " ")) > 1 {
+			m.ErrMsg = "Url cannot contain spaces"
+		} else {
+			m.History.Add(query)
+			cmd = func() tea.Msg {
+				return types.StartPlayURLMsg{URL: args}
 			}
 		}
 

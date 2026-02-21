@@ -176,3 +176,13 @@ type ShowToastMsg struct {
 }
 
 type ClearToastMsg struct{}
+
+type StartPlayURLMsg struct {
+	URL string
+}
+
+type PlayURLResultMsg struct {
+	URL           string
+	SelectedVideo VideoItem
+	Err           string
+}
