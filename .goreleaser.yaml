@@ -30,6 +30,9 @@ archives:
   - formats:
       - tar.gz
     name_template: "xytz-v{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats: ["zip"]
 checksum:
   name_template: "checksums.txt"
 snapshot:
@@ -77,6 +80,7 @@ changelog:
       order: 400
     - title: Other work
       order: 9999
+
 homebrew_casks:
   - name: xytz
     repository:
@@ -88,6 +92,7 @@ homebrew_casks:
   - dependencies:
       - formula: yt-dlp
       - formula: ffmpeg
+
 aurs:
   - homepage: "https://github.com/xdagiz/xytz"
     description: "a beautiful TUI YouTube Downloader"
@@ -95,16 +100,23 @@ aurs:
       - "Dagmawi Ali <xdagizjr2112 at gmail dot com>"
     contributors:
       - "Dagmawi Ali <xdagizjr2112 at gmail dot com>"
-
     license: "MIT"
-
     private_key: "{{ .Env.AUR_KEY }}"
-
     git_url: "ssh://aur@aur.archlinux.org/xytz-bin.git"
-
     depends:
       - yt-dlp
       - ffmpeg
-
     optdepends:
       - "mpv: for playing videos"
+
+scoops:
+  - name: xytz
+    directory: bucket
+    homepage: "https://github.com/xdagiz/xytz"
+    description: "a beautiful TUI YouTube Downloader"
+    license: MIT
+    depends: ["yt-dlp", "ffmpeg"]
+    repository:
+      owner: xdagiz
+      name: scoop-bucket
+      token: "{{ .Env.SCOOP_TOKEN }}"

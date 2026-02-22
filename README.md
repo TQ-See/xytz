@@ -44,7 +44,7 @@ https://github.com/user-attachments/assets/4e3f98c7-554f-4b9e-adac-52511ae69f32
 curl -fsSL https://raw.githubusercontent.com/xdagiz/xytz/main/install.sh | bash
 ```
 
-### Homebrew (MacOS)
+### Homebrew (MacOS/Linux)
 
 ```bash
 brew install xdagiz/tap/xytz
@@ -53,7 +53,14 @@ brew install xdagiz/tap/xytz
 ### AUR (Arch Linux)
 
 ```bash
-yay -S xytz-bin
+paru -S xytz-bin # or yay -S xytz-bin
+```
+
+### Scoop (Windows)
+
+```pwsh
+scoop bucket add xdagiz https://github.com/xdagiz/scoop-bucket.git
+scoop install xdagiz/xytz
 ```
 
 ### Go Install

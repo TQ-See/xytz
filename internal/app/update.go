@@ -509,7 +509,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case types.PlayVideoMsg:
 		if m.State == types.StateVideoPlaying {
-			m.State = types.StateVideoList
+			m.State = types.StateSearchInput
 			m.Player = models.PlayerModel{}
 			return m, nil
 		}
@@ -759,7 +759,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch msg.String() {
 			case "b", "esc":
 				m.PlayerManager.Kill()
-				m.State = types.StateVideoList
+				m.State = types.StateSearchInput
 				m.Player = models.PlayerModel{}
 				m.ErrMsg = ""
 				return m, nil
