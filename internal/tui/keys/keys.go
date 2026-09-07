@@ -34,11 +34,12 @@ type KeyMap struct {
 	TabPrev     key.Binding
 	CopyURL     key.Binding
 
-	OpenGitHub   key.Binding
-	SearchUp     key.Binding
-	SearchDown   key.Binding
-	DeleteItem   key.Binding
-	SaveForLater key.Binding
+	OpenGitHub    key.Binding
+	HistorySearch key.Binding
+	SearchUp      key.Binding
+	SearchDown    key.Binding
+	DeleteItem    key.Binding
+	SaveForLater  key.Binding
 
 	PlayVideo    key.Binding
 	Download     key.Binding
@@ -70,7 +71,7 @@ type KeyMap struct {
 func (k *KeyMap) ShortHelp() []key.Binding {
 	switch k.CurrentState {
 	case types.StateSearchInput:
-		return []key.Binding{k.QuitCtrlC, k.OpenGitHub, k.SearchUp, k.SearchDown}
+		return []key.Binding{k.QuitCtrlC, k.OpenGitHub, k.HistorySearch, k.SearchUp, k.SearchDown}
 
 	case types.StateResumeList, types.StateLaterList:
 		return []key.Binding{k.Enter, k.DeleteItem, k.Cancel}
@@ -211,11 +212,12 @@ var Keys = &KeyMap{
 	TabPrev:     key.NewBinding(key.WithKeys("shift+tab"), key.WithHelp("shift+tab", "prev tab")),
 	CopyURL:     key.NewBinding(key.WithKeys("ctrl+y"), key.WithHelp("ctrl+y", "copy url")),
 
-	OpenGitHub:   key.NewBinding(key.WithKeys("ctrl+o"), key.WithHelp("ctrl+o", "open github")),
-	SearchUp:     key.NewBinding(key.WithKeys("up", "ctrl+p"), key.WithHelp("↑/ctrl+p", "history up")),
-	SearchDown:   key.NewBinding(key.WithKeys("down", "ctrl+n"), key.WithHelp("↓/ctrl+n", "history down")),
-	DeleteItem:   key.NewBinding(key.WithKeys("delete", "ctrl+d"), key.WithHelp("delete", "delete item")),
-	SaveForLater: key.NewBinding(key.WithKeys("ctrl+s"), key.WithHelp("ctrl+s", "save for later")),
+	OpenGitHub:    key.NewBinding(key.WithKeys("ctrl+o"), key.WithHelp("ctrl+o", "open github")),
+	HistorySearch: key.NewBinding(key.WithKeys("ctrl+r"), key.WithHelp("ctrl+r", "history search")),
+	SearchUp:      key.NewBinding(key.WithKeys("up", "ctrl+p"), key.WithHelp("↑/ctrl+p", "history up")),
+	SearchDown:    key.NewBinding(key.WithKeys("down", "ctrl+n"), key.WithHelp("↓/ctrl+n", "history down")),
+	DeleteItem:    key.NewBinding(key.WithKeys("delete", "ctrl+d"), key.WithHelp("delete", "delete item")),
+	SaveForLater:  key.NewBinding(key.WithKeys("ctrl+s"), key.WithHelp("ctrl+s", "save for later")),
 
 	PlayVideo:    key.NewBinding(key.WithKeys("p"), key.WithHelp("p", "play")),
 	Download:     key.NewBinding(key.WithKeys("d"), key.WithHelp("d", "download")),

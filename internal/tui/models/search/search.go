@@ -27,6 +27,7 @@ type Model struct {
 	Height             int
 	Input              textinput.Model
 	Autocomplete       slash.Model
+	HistoryPicker      HistoryPicker
 	Help               HelpModel
 	History            HistoryNavigator
 	SortBy             types.SortBy
@@ -91,12 +92,13 @@ func NewModel(ctx *appctx.AppContext) Model {
 	ti.Focus()
 
 	m := Model{
-		ctx:          ctx,
-		Input:        ti,
-		Autocomplete: slash.NewModel(ctx.Styles),
-		Help:         NewHelpModel(ctx.Styles),
-		History:      NewHistoryNavigator(),
-		prefix:       zone.NewPrefix(),
+		ctx:           ctx,
+		Input:         ti,
+		Autocomplete:  slash.NewModel(ctx.Styles),
+		HistoryPicker: NewHistoryPicker(ctx.Styles),
+		Help:          NewHelpModel(ctx.Styles),
+		History:       NewHistoryNavigator(),
+		prefix:        zone.NewPrefix(),
 	}
 
 	m.applyFromContext()
@@ -152,6 +154,7 @@ func (m *Model) ApplyTheme() {
 	m.Input.SetStyles(s)
 	m.Help.ApplyTheme(m.ctx.Styles)
 	m.Autocomplete.SetStyles(m.ctx.Styles)
+	m.HistoryPicker.SetStyles(m.ctx.Styles)
 }
 
 func (m Model) Init() tea.Cmd {
@@ -189,7 +192,13 @@ func (m Model) View() string {
 		s.WriteString(m.ctx.Styles.ErrorMessageStyle.PaddingLeft(1).Render("⚠ " + m.ErrMsg))
 	}
 
-	if m.Autocomplete.Visible {
+	if m.HistoryPicker.Visible {
+		pickerView := m.HistoryPicker.View()
+		if pickerView != "" {
+			s.WriteString("\n")
+			s.WriteString(pickerView)
+		}
+	} else if m.Autocomplete.Visible {
 		autocompleteView := m.Autocomplete.View()
 		if autocompleteView != "" {
 			s.WriteString("\n")
@@ -236,6 +245,7 @@ func (m Model) HandleResize(w, h int) Model {
 	m.Height = h
 	m.Input.SetWidth(w - 4)
 	m.Autocomplete.HandleResize(w, h)
+	m.HistoryPicker.HandleResize(w, h)
 	m.Help.HandleResize(w)
 	return m
 }
@@ -253,6 +263,34 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		switch keyMsg.String() {
 		case "esc":
 			m.Help.Hide()
+		}
+	}
+
+	if m.HistoryPicker.Visible {
+		if keyMsg, ok := msg.(tea.KeyPressMsg); ok {
+			switch {
+			case key.Matches(keyMsg, keys.Keys.ACSelect):
+				if selected := m.HistoryPicker.Selected(); selected != "" {
+					m.Input.SetValue(selected)
+					m.Input.CursorEnd()
+				}
+				m.HistoryPicker.Hide()
+				return m, nil
+
+			case key.Matches(keyMsg, keys.Keys.ACUp):
+				m.HistoryPicker.Prev()
+				return m, nil
+
+			case key.Matches(keyMsg, keys.Keys.ACDown):
+				m.HistoryPicker.Next()
+				return m, nil
+
+			case keyMsg.String() == "esc":
+				m.Input.SetValue(m.HistoryPicker.RestoreValue())
+				m.Input.CursorEnd()
+				m.HistoryPicker.Hide()
+				return m, nil
+			}
 		}
 	}
 
@@ -336,6 +374,10 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		}
 
 		switch {
+		case key.Matches(msg, keys.Keys.HistorySearch):
+			m.openHistoryPicker()
+			return m, nil
+
 		case key.Matches(msg, keys.Keys.Enter):
 			return m.handleEnterKey()
 
@@ -359,7 +401,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			return m, openURLCmd(types.GithubRepoLink)
 
 		case key.Matches(msg, keys.Keys.Help):
-			if m.Input.Value() == "" {
+			if m.Input.Value() == "" && !m.HistoryPicker.Visible {
 				m.Help.Toggle()
 				return m, nil
 			}
@@ -371,6 +413,10 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	newValue := m.Input.Value()
 
 	m.History.TrackEdit(oldValue, newValue)
+
+	if m.HistoryPicker.Visible && newValue != oldValue {
+		m.HistoryPicker.UpdateFilter(newValue)
+	}
 
 	if m.Autocomplete.Visible && newValue != oldValue {
 		m.updateAutocompleteFilter()
@@ -431,6 +477,17 @@ func (m Model) handleEnterKey() (Model, tea.Cmd) {
 	return m, tea.Batch(func() tea.Msg {
 		return msg
 	}, saveHistoryCmd(query))
+}
+
+func (m *Model) openHistoryPicker() {
+	items := m.History.Items()
+	if len(items) == 1 {
+		m.Input.SetValue(items[0])
+		m.Input.CursorEnd()
+		return
+	}
+	m.Autocomplete.Hide()
+	m.HistoryPicker.Show(items, m.Input.Value())
 }
 
 type commandSpec struct {

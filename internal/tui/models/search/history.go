@@ -52,6 +52,12 @@ func (h *HistoryNavigator) AddLocal(query string) {
 	h.originalQuery = ""
 }
 
+func (h *HistoryNavigator) Items() []string {
+	items := make([]string, len(h.items))
+	copy(items, h.items)
+	return items
+}
+
 func (h *HistoryNavigator) Navigate(dir int, getCurrentValue func() string, setValue func(string)) {
 	if h.index == -1 {
 		h.originalQuery = getCurrentValue()

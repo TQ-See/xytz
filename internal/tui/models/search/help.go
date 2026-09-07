@@ -62,6 +62,7 @@ func NewHelpModel(st styles.Styles) HelpModel {
 				Content: ` /              Slash commands (autocomplete)
  ↑ / ctrl+p    Previous search in history
  ↓ / ctrl+n    Next search in history
+ ctrl+r        Fuzzy search history
  ?             Toggle this help
  b / esc       Go back (in list views)`,
 			},
