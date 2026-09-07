@@ -76,6 +76,30 @@ func (m *Model) playbackBackTarget() types.State {
 	}
 }
 
+func playbackExitMessage(ytdlFormat string) string {
+	if isBareFormatID(ytdlFormat) {
+		return "Playback failed. Check default_quality in config"
+	}
+	return "Playback failed. The player exited with an error"
+}
+
+func isBareFormatID(ytdlFormat string) bool {
+	format := strings.TrimSpace(ytdlFormat)
+	if format == "" {
+		return false
+	}
+	if config.GetPresetByName(format) != nil {
+		return false
+	}
+	for _, r := range format {
+		if r >= '0' && r <= '9' || r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r == '_' || r == '-' {
+			continue
+		}
+		return false
+	}
+	return true
+}
+
 func isSpotifyUIState(s types.State) bool {
 	switch s {
 	case types.StateSpotifyTrack, types.StateSpotifyAlbumList, types.StateSpotifyDownload:

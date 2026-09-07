@@ -14,13 +14,12 @@ import (
 	"github.com/xdagiz/xytz/internal/ytdlp"
 )
 
-type ExitHandler func(video types.VideoItem, url string)
+type ExitHandler func(video types.VideoItem, url string, exitErr error)
 
 type PlayerState struct {
 	Process             *exec.Cmd
 	YTDLPProcess        *exec.Cmd
 	KilledIntentionally bool
-	OnExit              ExitHandler
 }
 
 type PlayerManager struct {
@@ -114,7 +113,6 @@ func (pm *PlayerManager) startWithMPV(url string, ytdlFormat string, video types
 	pm.current = &PlayerState{
 		Process:             cmd,
 		KilledIntentionally: false,
-		OnExit:              onExit,
 	}
 	current := pm.current
 	pm.mu.Unlock()
@@ -135,7 +133,7 @@ func (pm *PlayerManager) startWithMPV(url string, ytdlFormat string, video types
 				log.Error("mpv exited with error", "err", err)
 			}
 			if onExit != nil {
-				onExit(video, url)
+				onExit(video, url, err)
 			}
 		}
 	}()
@@ -192,7 +190,6 @@ func (pm *PlayerManager) startWithFFplay(url string, ytdlFormat string, video ty
 		Process:             ffplayCmd,
 		YTDLPProcess:        ytdlpCmd,
 		KilledIntentionally: false,
-		OnExit:              onExit,
 	}
 	current := pm.current
 	pm.mu.Unlock()
@@ -223,7 +220,7 @@ func (pm *PlayerManager) startWithFFplay(url string, ytdlFormat string, video ty
 				log.Error("ffplay exited with error", "err", err)
 			}
 			if onExit != nil {
-				onExit(video, url)
+				onExit(video, url, err)
 			}
 		}
 	}()

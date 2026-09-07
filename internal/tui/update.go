@@ -1595,9 +1595,20 @@ func (m *Model) applyVideoInfo(msg types.VideoInfoFetchedMsg) (tea.Model, tea.Cm
 
 func (m *Model) playVideo(msg types.PlayVideoMsg) (tea.Model, tea.Cmd) {
 	if msg.ErrMsg != "" {
-		m.ErrMsg = msg.ErrMsg
+		target := m.playbackBackTarget()
 		m.playbackOrigin = ""
-		return m, nil
+		if m.State != target {
+			m.transitionTo(target)
+		} else {
+			m.ErrMsg = ""
+		}
+		toast := func() tea.Msg {
+			return types.ShowToastMsg{Message: msg.ErrMsg, Duration: 6}
+		}
+		if target == types.StateSearchInput {
+			return m, tea.Batch(toast, textinput.Blink)
+		}
+		return m, toast
 	}
 
 	if msg.IsPlayerExit {
@@ -2071,10 +2082,15 @@ func (m *Model) startDownloadCmd(req types.DownloadRequest) tea.Cmd {
 
 func (m *Model) playURLCmd(url, ytdlFormat, backendPreference string, video types.VideoItem) tea.Cmd {
 	return func() tea.Msg {
-		res := m.Ctx.PlayerManager.Start(url, ytdlFormat, backendPreference, video, func(v types.VideoItem, u string) {
-			if m.Program != nil {
-				m.Program.Send(types.PlayVideoMsg{SelectedVideo: v, IsPlayerExit: true, URL: u})
+		res := m.Ctx.PlayerManager.Start(url, ytdlFormat, backendPreference, video, func(v types.VideoItem, u string, exitErr error) {
+			if m.Program == nil {
+				return
 			}
+			if exitErr != nil {
+				m.Program.Send(types.PlayVideoMsg{SelectedVideo: v, URL: u, ErrMsg: playbackExitMessage(ytdlFormat)})
+				return
+			}
+			m.Program.Send(types.PlayVideoMsg{SelectedVideo: v, IsPlayerExit: true, URL: u})
 		})
 
 		if res.ErrMsg != "" {
