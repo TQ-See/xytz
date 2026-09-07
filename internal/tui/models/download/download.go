@@ -5,11 +5,11 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-	"unicode/utf8"
 
 	"charm.land/lipgloss/v2"
 	"github.com/xdagiz/xytz/internal/downloader"
 	"github.com/xdagiz/xytz/internal/medialink"
+	"github.com/xdagiz/xytz/internal/paths"
 	appctx "github.com/xdagiz/xytz/internal/tui/context"
 	"github.com/xdagiz/xytz/internal/tui/keys"
 	"github.com/xdagiz/xytz/internal/tui/models"
@@ -356,28 +356,7 @@ func (m Model) currentDisplayDestination() string {
 }
 
 func truncateDestinationTitle(path string, maxTitleLen int) string {
-	if path == "" || maxTitleLen <= 0 {
-		return path
-	}
-
-	base := filepath.Base(path)
-	ext := strings.TrimPrefix(filepath.Ext(base), ".")
-	title := strings.TrimSuffix(base, filepath.Ext(base))
-	if utf8.RuneCountInString(title) <= maxTitleLen {
-		return path
-	}
-
-	truncated := utils.Truncate(title, maxTitleLen+3)
-	if ext != "" {
-		truncated += ext
-	}
-
-	dir := filepath.Dir(path)
-	if dir == "." || dir == "" {
-		return truncated
-	}
-
-	return filepath.Join(dir, truncated)
+	return paths.TruncatePathTail(path, maxTitleLen)
 }
 
 func (m Model) View() string {
@@ -459,7 +438,7 @@ func (m Model) View() string {
 			s.WriteRune('\n')
 			s.WriteString(zone.Mark(m.prefix+"continue", m.ctx.Styles.HelpStyle.Render("Press Enter to continue")))
 		} else {
-			finalPath := m.currentDisplayDestination()
+			finalPath := paths.DisplayPath(m.currentDisplayDestination())
 
 			label := "Video"
 			if m.IsAudioTab || m.QueueIsAudioTab {

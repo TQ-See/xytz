@@ -10,6 +10,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 	zone "github.com/lrstanley/bubblezone/v2"
+	"github.com/xdagiz/xytz/internal/paths"
 	appctx "github.com/xdagiz/xytz/internal/tui/context"
 	"github.com/xdagiz/xytz/internal/tui/keys"
 	"github.com/xdagiz/xytz/internal/types"
@@ -238,6 +239,9 @@ func (m Model) View() string {
 					m.SelectedVideo.Channel,
 					m.PlaylistCount,
 				)
+				if base := paths.DisplayPath(m.ctx.Config.GetDownloadPath()); base != "" {
+					preview = base + "/" + preview
+				}
 				s.WriteString(m.ctx.Styles.MutedStyle.Render("  └─ " + preview))
 			}
 

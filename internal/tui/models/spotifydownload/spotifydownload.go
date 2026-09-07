@@ -12,6 +12,7 @@ import (
 	"charm.land/lipgloss/v2"
 	zone "github.com/lrstanley/bubblezone/v2"
 	"github.com/xdagiz/xytz/internal/downloader"
+	"github.com/xdagiz/xytz/internal/paths"
 	appctx "github.com/xdagiz/xytz/internal/tui/context"
 	"github.com/xdagiz/xytz/internal/tui/keys"
 	"github.com/xdagiz/xytz/internal/tui/models"
@@ -262,15 +263,15 @@ func (m Model) HandleResize(w, h int) Model {
 
 func (m Model) displayDestination() string {
 	if m.FileDestination != "" {
-		return m.FileDestination
+		return paths.DisplayPath(m.FileDestination)
 	}
 
 	if m.Track.Title == "" {
-		return m.Destination
+		return paths.DisplayPath(m.Destination)
 	}
 
 	base := downloader.SanitizeFilename(m.Track.Artist + " - " + m.Track.Title)
-	return filepath.Join(m.Destination, base+".mp3")
+	return paths.DisplayPath(filepath.Join(m.Destination, base+".mp3"))
 }
 
 func (m Model) View() string {
@@ -292,6 +293,10 @@ func (m Model) View() string {
 	if m.Completed {
 		if m.IsQueue {
 			s.WriteString(m.ctx.Styles.CompletionMessageStyle.Render("✓ " + m.queueSummary()))
+			if m.OutputDir != "" {
+				s.WriteRune('\n')
+				s.WriteString(m.ctx.Styles.MutedStyle.Render("in " + paths.DisplayPath(m.OutputDir)))
+			}
 		} else {
 			s.WriteString(m.ctx.Styles.CompletionMessageStyle.Render("✓ " + m.displayDestination()))
 		}
@@ -326,6 +331,13 @@ func (m Model) View() string {
 		}
 	} else {
 		s.WriteString(m.ctx.Styles.MutedStyle.Render(m.displayPhase()))
+	}
+
+	if !m.IsQueue {
+		if dest := m.displayDestination(); dest != "" {
+			s.WriteRune('\n')
+			s.WriteString(m.ctx.Styles.MutedStyle.Render("Destination: " + dest))
+		}
 	}
 
 	return s.String()
